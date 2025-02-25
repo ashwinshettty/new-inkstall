@@ -4,7 +4,7 @@ import MainFrame from './ui/MainFrame'
 const Admin = () => {
   return (
     <MainFrame>
-        Hello
+      
     </MainFrame>
   )
 }
