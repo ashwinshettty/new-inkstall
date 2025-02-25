@@ -267,7 +267,7 @@ const Students = () => {
     setFeeBreakdown(fees);
   }, [integratedCalculateFees]);
 
-  // Student photo state
+  // Student photo state (currently not sent to backend)
   const [studentPhoto, setStudentPhoto] = useState(null);
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
@@ -276,22 +276,112 @@ const Students = () => {
     }
   };
 
-  const handleSaveStudent = () => {
+  // Helper function to compute fee for an individual subject
+  const computeSubjectFee = (subjectItem) => {
+    if (subjectItem.startDate && subjectItem.endDate && subjectItem.subject) {
+      // Determine base rate based on branch and board
+      let baseRate;
+      if (studentBranch === 'Online') {
+        baseRate = 1500;
+      } else {
+        switch (studentBoard) {
+          case 'IGCSE': baseRate = 1200; break;
+          case 'IB': baseRate = 2500; break;
+          case 'NIOS': baseRate = 3000; break;
+          case 'CBSE':
+          case 'SSC': baseRate = 800; break;
+          default: baseRate = 800;
+        }
+      }
+      let gradeMultiplier = 1;
+      const earlyGrades = ['Playschool', 'Nurserry', 'Jr. KG', 'Sr. KG', '1'];
+      if (!earlyGrades.includes(studentGrade)) {
+        const gradeNum = parseInt(studentGrade);
+        if (!isNaN(gradeNum) && gradeNum > 1) {
+          gradeMultiplier = Math.pow(1.1, gradeNum - 1);
+        }
+      }
+      const baseMonthlyRate = baseRate * gradeMultiplier;
+      let monthlyRate = baseMonthlyRate;
+      if (oneToOneEnabled) {
+        monthlyRate = baseMonthlyRate * (1 + oneToOnePercent / 100);
+      }
+      const dailyRate = monthlyRate / 30;
+      const days = dayjs(subjectItem.endDate).diff(dayjs(subjectItem.startDate), 'days') + 1;
+      const subjectFee = dailyRate * days;
+      return Math.round(subjectFee);
+    }
+    return 0;
+  };
+
+  // Modified save handler to send data to the backend
+  const handleSaveStudent = async () => {
+    // Prepare subjects array with the required fields
+    const preparedSubjects = selectedSubjects.map(s => ({
+      name: s.subject,
+      total: computeSubjectFee(s),
+      startDate: s.startDate ? s.startDate.toISOString() : new Date().toISOString(),
+      endDate: s.endDate ? s.endDate.toISOString() : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+    }));
+
+    // Map phone numbers to include relationName instead of name
+    const preparedPhoneNumbers = phoneNumbers.map(p => ({
+      number: p.number,
+      relation: p.relation.toLowerCase(),
+      relationName: p.name
+    }));
+
+    // Prepare fee configuration using feeBreakdown and fee settings
+    const feeConfig = {
+      basePrice: feeBreakdown?.subtotal || 0,
+      gstApplied: gstEnabled,
+      gstPercentage: gstEnabled ? 18 : 0,
+      gstAmount: feeBreakdown?.gstAmount || 0,
+      scholarshipApplied: scholarshipEnabled,
+      scholarshipPercentage: scholarshipEnabled ? scholarshipPercent : 0,
+      scholarshipAmount: feeBreakdown?.scholarshipDiscount.amount || 0,
+      oneToOneApplied: oneToOneEnabled,
+      oneToOnePercentage: oneToOneEnabled ? oneToOnePercent : 0,
+      oneToOneAmount: oneToOneEnabled ? Math.round((feeBreakdown?.subtotal || 0) * (oneToOnePercent / 100)) : 0,
+      baseAmount: feeBreakdown?.baseAmount || 0,
+      totalAmount: feeBreakdown?.finalTotal || 0
+    };
+
     const studentData = {
-      name: studentName,
+      studentName,
       grade: studentGrade,
       branch: studentBranch,
       board: studentBoard,
       school: schoolName,
       status,
-      phoneNumbers,
-      photo: studentPhoto,
-      subjects: selectedSubjects,
-      feeBreakdown
-      // ...include other fields as necessary
+      subjects: preparedSubjects,
+      phoneNumbers: preparedPhoneNumbers,
+      feeConfig
+      // Note: The photo is not sent since the backend does not currently process file uploads.
     };
+
     console.log('Saving student data:', studentData);
-    // TODO: Add your API call here to save the data
+
+    try {
+      const response = await fetch('https://bc8b-2405-201-16-f22a-f470-6fb3-c5f0-b81a.ngrok-free.app', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+          // Include any authorization headers if needed.
+        },
+        body: JSON.stringify(studentData)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('Student saved successfully!');
+        // Optionally, clear the form or update UI state here.
+      } else {
+        alert('Error saving student: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error saving student:', error);
+      alert('Error saving student');
+    }
   };
 
   return (
@@ -602,16 +692,6 @@ const Students = () => {
                 <Typography variant="subtitle2">Final Total</Typography>
                 <Typography variant="subtitle2">{formatAmount(feeBreakdown.finalTotal)}</Typography>
               </Box>
-              {/* {feeBreakdown.installments && (
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle2">Installment Schedule:</Typography>
-                  {feeBreakdown.installments.map((inst, idx) => (
-                    <Typography key={idx} variant="body2">
-                      Installment {idx + 1}: {formatAmount(inst.amount)} due on {inst.dueDate}
-                    </Typography>
-                  ))}
-                </Box>
-              )} */}
             </Box>
           </Grid>
         )}
