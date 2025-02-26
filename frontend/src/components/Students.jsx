@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
+import React, { useEffect, useState, useCallback } from 'react';
+import dayjs from 'dayjs';
 import {
   Autocomplete,
   Box,
@@ -16,6 +18,9 @@ import {
   InputLabel,
   FormControl,
   InputAdornment
+} from '@mui/material';
+import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 } from '@mui/material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -65,6 +70,7 @@ const Students = () => {
       subject: '',
       startDate: null,
       endDate: null
+      endDate: null
     }
   ]);
 
@@ -73,6 +79,26 @@ const Students = () => {
     { id: 1, number: '', relation: '', name: '' }
   ]);
 
+  // Fee breakdown state (calculated using integrated logic)
+  const [feeBreakdown, setFeeBreakdown] = useState(null);
+
+  // Handle scholarship toggle
+  const handleScholarshipToggle = (enabled) => {
+    setScholarshipEnabled(enabled);
+    if (enabled) {
+      setScholarshipPercent(10); // default 10%
+    }
+  };
+
+  // Handle one-to-one toggle
+  const handleOneToOneToggle = (enabled) => {
+    setOneToOneEnabled(enabled);
+    if (enabled) {
+      setOneToOnePercent(10); // default 10%
+    }
+  };
+
+  // Phone number handlers
   // Fee breakdown state (calculated using integrated logic)
   const [feeBreakdown, setFeeBreakdown] = useState(null);
 
@@ -116,9 +142,11 @@ const Students = () => {
   };
 
   // Subjects handlers
+  // Subjects handlers
   const handleAddSubject = () => {
     setSelectedSubjects([
       ...selectedSubjects,
+      { subject: '', startDate: null, endDate: null }
       { subject: '', startDate: null, endDate: null }
     ]);
   };
@@ -126,6 +154,7 @@ const Students = () => {
   const handleRemoveSubject = (index) => {
     const newSubjects = selectedSubjects.filter((_, i) => i !== index);
     if (newSubjects.length === 0) {
+      newSubjects.push({ subject: '', startDate: null, endDate: null });
       newSubjects.push({ subject: '', startDate: null, endDate: null });
     }
     setSelectedSubjects(newSubjects);
@@ -135,13 +164,17 @@ const Students = () => {
     const newSubjects = [...selectedSubjects];
     if (field === 'subject') {
       newSubjects[index] = { ...newSubjects[index], subject: value };
+      newSubjects[index] = { ...newSubjects[index], subject: value };
     } else {
+      // For startDate/endDate changes
+      newSubjects[index] = { ...newSubjects[index], [field]: value };
       // For startDate/endDate changes
       newSubjects[index] = { ...newSubjects[index], [field]: value };
     }
     setSelectedSubjects(newSubjects);
   };
 
+  // Fetch USD rate if needed
   // Fetch USD rate if needed
   useEffect(() => {
     if (showUSD && !usdRate) {
@@ -150,8 +183,13 @@ const Students = () => {
         .then(data => {
           const rate = data.rates.INR;
           setUsdRate(rate * 1.03); // 3% markup
+          const rate = data.rates.INR;
+          setUsdRate(rate * 1.03); // 3% markup
         })
         .catch(error => {
+          console.error('Error fetching USD rate:', error);
+          setShowUSD(false);
+        });
           console.error('Error fetching USD rate:', error);
           setShowUSD(false);
         });
@@ -389,17 +427,21 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
   return (
     <MainFrame sx={{ p: 3 }}>
       {/* Header with action buttons */}
+      {/* Header with action buttons */}
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'bold', color: '#1a237e' }}>
           <AddIcon /> Add New Students
         </Typography>
         <Box sx={{ flex: 1 }} />
         <Button variant="contained" startIcon={<DownloadIcon />} sx={{ bgcolor: '#4a90e2', color: '#964b00', borderRadius: '8px' }}>
+        <Button variant="contained" startIcon={<DownloadIcon />} sx={{ bgcolor: '#4a90e2', color: '#964b00', borderRadius: '8px' }}>
           Download Template
         </Button>
         <Button variant="contained" startIcon={<UploadIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
+        <Button variant="contained" startIcon={<UploadIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
           Upload Excel
         </Button>
+        <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
         <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
           Add Manually
         </Button>
@@ -415,6 +457,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             required
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
+            value={studentName}
+            onChange={(e) => setStudentName(e.target.value)}
             placeholder="Enter student name"
           />
         </Grid>
@@ -425,6 +469,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             label="Grade"
             size="small"
             required
+            value={studentGrade}
+            onChange={(e) => setStudentGrade(e.target.value)}
             value={studentGrade}
             onChange={(e) => setStudentGrade(e.target.value)}
           >
@@ -444,6 +490,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             required
             value={studentBranch}
             onChange={(e) => setStudentBranch(e.target.value)}
+            value={studentBranch}
+            onChange={(e) => setStudentBranch(e.target.value)}
           >
             {branches.map((branch) => (
               <MenuItem key={branch} value={branch}>
@@ -460,6 +508,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             placeholder="Enter school name"
             value={schoolName}
             onChange={(e) => setSchoolName(e.target.value)}
+            value={schoolName}
+            onChange={(e) => setSchoolName(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -469,6 +519,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             label="Board"
             size="small"
             required
+            value={studentBoard}
+            onChange={(e) => setStudentBoard(e.target.value)}
             value={studentBoard}
             onChange={(e) => setStudentBoard(e.target.value)}
           >
@@ -487,6 +539,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             size="small"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
           >
             {admissionStatus.map((status) => (
               <MenuItem key={status} value={status}>
@@ -497,10 +551,24 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
         </Grid>
 
         {/* Fee Settings */}
+        {/* Fee Settings */}
         <Grid item xs={12}>
           <Box sx={{ bgcolor: '#f5f5f5', borderRadius: 1, p: 2, width: '100%' }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>Fee Settings</Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              {/* GST */}
+              <FormControlLabel
+                control={
+                  <Switch 
+                    size="medium" 
+                    checked={gstEnabled}
+                    onChange={(e) => setGstEnabled(e.target.checked)}
+                  />
+                }
+                label={<Typography variant="body2">GST</Typography>}
+                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+              />
+              {/* Scholarship */}
               {/* GST */}
               <FormControlLabel
                 control={
@@ -524,6 +592,7 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                     />
                   }
                   label={<Typography variant="body2">Scholarship</Typography>}
+                  label={<Typography variant="body2">Scholarship</Typography>}
                   sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
                 />
                 {scholarshipEnabled && (
@@ -540,6 +609,7 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 )}
               </Box>
               {/* 1:1 */}
+              {/* 1:1 */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <FormControlLabel
                   control={
@@ -549,6 +619,7 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                       onChange={(e) => handleOneToOneToggle(e.target.checked)}
                     />
                   }
+                  label={<Typography variant="body2">1:1</Typography>}
                   label={<Typography variant="body2">1:1</Typography>}
                   sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
                 />
@@ -577,10 +648,25 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 label={<Typography variant="body2">$</Typography>}
                 sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
               />
+              {/* USD */}
+              <FormControlLabel
+                control={
+                  <Switch 
+                    size="medium" 
+                    checked={showUSD}
+                    onChange={(e) => setShowUSD(e.target.checked)}
+                  />
+                }
+                label={<Typography variant="body2">$</Typography>}
+                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+              />
             </Box>
           </Box>
         </Grid>
 
+        {/* Subjects Selection with date pickers */}
+        <Grid item xs={12} md={12} sx={{ mt: 1 }}>
+          <Grid container justifyContent="space-between" alignItems="center">
         {/* Subjects Selection with date pickers */}
         <Grid item xs={12} md={12} sx={{ mt: 1 }}>
           <Grid container justifyContent="space-between" alignItems="center">
@@ -600,6 +686,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
           {selectedSubjects.map((subjectItem, index) => (
             <Grid container spacing={2} key={index} sx={{ mt: 1, mb: 1, alignItems: 'center' }}>
               <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', width: '40%' }}>
+            <Grid container spacing={2} key={index} sx={{ mt: 1, mb: 1, alignItems: 'center' }}>
+              <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', width: '40%' }}>
                 <FormControl fullWidth size="medium" required>
                   <InputLabel>Subject</InputLabel>
                   <Select
@@ -610,7 +698,13 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                     {allSubjectsList
                       .filter(s => 
                         !selectedSubjects.some((sel, i) => sel.subject === s.name && i !== index)
+                    {allSubjectsList
+                      .filter(s => 
+                        !selectedSubjects.some((sel, i) => sel.subject === s.name && i !== index)
                       )
+                      .map(s => (
+                        <MenuItem key={s.name} value={s.name}>
+                          {s.name}
                       .map(s => (
                         <MenuItem key={s.name} value={s.name}>
                           {s.name}
@@ -622,14 +716,18 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'center', width: '25%' }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', width: '25%' }}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
                     label="Start Date"
                     value={subjectItem.startDate}
                     onChange={(value) => handleSubjectChange(index, 'startDate', value)}
                     renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
+                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
                   />
                 </LocalizationProvider>
               </Box>
+              <Box sx={{ display: 'flex', width: '25%' }}>
               <Box sx={{ display: 'flex', width: '25%' }}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
@@ -639,10 +737,14 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                     renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
                     minDate={subjectItem.startDate || dayjs()}
                     disabled={!subjectItem.startDate}
+                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
+                    minDate={subjectItem.startDate || dayjs()}
+                    disabled={!subjectItem.startDate}
                   />
                 </LocalizationProvider>
               </Box>
               <Box>
+                <IconButton size="small" onClick={() => handleRemoveSubject(index)} sx={{ color: 'error.main' }}>
                 <IconButton size="small" onClick={() => handleRemoveSubject(index)} sx={{ color: 'error.main' }}>
                   <DeleteIcon />
                 </IconButton>
@@ -651,6 +753,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
           ))}
         </Grid>
           
+        {/* Fee Details (integrated fee breakdown) */}
+        {feeBreakdown && (
         {/* Fee Details (integrated fee breakdown) */}
         {feeBreakdown && (
           <Grid item xs={12}>
@@ -671,7 +775,28 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 </Box>
               )}
               {feeBreakdown.scholarshipDiscount.amount > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="body2">Subtotal</Typography>
+                <Typography variant="body2">{formatAmount(feeBreakdown.subtotal)}</Typography>
+              </Box>
+              {feeBreakdown.subjectDiscount.amount > 0 && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">
+                    Multi-subject Discount ({feeBreakdown.subjectDiscount.percentage}%)
+                  </Typography>
+                  <Typography variant="body2" color="error">
+                    -{formatAmount(feeBreakdown.subjectDiscount.amount)}
+                  </Typography>
+                </Box>
+              )}
+              {feeBreakdown.scholarshipDiscount.amount > 0 && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2">
+                    Scholarship ({feeBreakdown.scholarshipDiscount.percentage}%)
+                  </Typography>
+                  <Typography variant="body2" color="error">
+                    -{formatAmount(feeBreakdown.scholarshipDiscount.amount)}
+                  </Typography>
                   <Typography variant="body2">
                     Scholarship ({feeBreakdown.scholarshipDiscount.percentage}%)
                   </Typography>
@@ -700,6 +825,7 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
 
         {/* Phone Numbers */}
         <Grid item xs={12} container justifyContent="space-between" alignItems="center">
+        <Grid item xs={12} container justifyContent="space-between" alignItems="center">
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
             Phone Numbers <Typography component="span" color="error">*</Typography>
           </Typography>
@@ -714,6 +840,7 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
           </Button>
         </Grid>
         {phoneNumbers.map((phone) => (
+          <Grid container spacing={2} key={phone.id} sx={{ mb: 2, ml: 1 }}>
           <Grid container spacing={2} key={phone.id} sx={{ mb: 2, ml: 1 }}>
             <Grid item xs={12} md={4}>
               <TextField
@@ -739,6 +866,11 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                       <MenuItem key={option} value={option}>{option}</MenuItem>
                     ))
                   }
+                  {['Father', 'Mother', 'Guardian', 'Self', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Grandfather', 'Grandmother', 'Other']
+                    .map(option => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))
+                  }
                 </Select>
               </FormControl>
             </Grid>
@@ -747,11 +879,13 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 fullWidth
                 size="small"
                 label="Contact Person's Name"
+                label="Contact Person's Name"
                 required
                 value={phone.name}
                 onChange={(e) => handlePhoneNumberChange(phone.id, 'name', e.target.value)}
               />
             </Grid>
+            <Grid item xs={12} md={1} container alignItems="center">
             <Grid item xs={12} md={1} container alignItems="center">
               {phoneNumbers.length > 1 && (
                 <IconButton 
@@ -787,11 +921,15 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
 
         {/* Save Button */}
         <Grid item xs={12}>
+        <Grid item xs={12}>
           <Button
             variant="contained"
             size="medium"
             fullWidth
             onClick={handleSaveStudent}
+            sx={{ mt: 2, backgroundColor: '#fecc00', color: '#964b00', gap: 1 }}
+          >
+            <FiSave /> Save Student
             sx={{ mt: 2, backgroundColor: '#fecc00', color: '#964b00', gap: 1 }}
           >
             <FiSave /> Save Student
@@ -801,5 +939,8 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
     </MainFrame>
   );
 };
+  );
+};
 
+export default Students;
 export default Students;
