@@ -299,4 +299,13 @@ router.get('/all', auth, async (req, res) => {
     }
 });
 
+router.get('/my-attendance', auth, async (req, res) => {
+    try {
+        const teacherId = req.user._id;
+        const attendanceRecords = await Attendance.find({ teacherId });
+        res.json(attendanceRecords); // Ensure this includes punchIn, punchOut, workingHours, and status
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching attendance records', error: error.message });
+    }
+});
 module.exports = router;

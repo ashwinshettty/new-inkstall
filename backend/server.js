@@ -7,6 +7,7 @@ const corsOptions = require('./config/cors');
 const routes = require('./routes/index.routes');
 const authRoutes = require('./routes/auth.routes');
 const teacherRoutes = require('./routes/teacher.routes');
+const studentRoutes = require('./routes/student.route');
 const leaveRequestRoutes = require('./routes/leaveRequest.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/students', studentRoutes);
 app.use('/', routes);
 
 // Error handling

@@ -105,7 +105,7 @@ exports.createUser = async (req, res) => {
                     subjects: subjects || [],
                     aboutMe: aboutMe || '',
                     workingHours: workingHours || {},
-                    salary: salary || { type: 'monthly', amount: 0 }
+                    salary: salary || { type: 'monthly'||'hourly', amount: 0 }
                 });
             } catch (error) {
                 // If teacher profile creation fails, delete the user

@@ -4,7 +4,7 @@ import TeacherImage from '../assets/Images/pfp.jpeg'
 import { CalendarCheck2, Clock9, Eye, IndianRupee, Mail, Pencil } from 'lucide-react';
 
 const TeacherCard = ({ teacher }) => {
-    const {name, email, joining_date, salary, timing, subjects} = teacher
+    const {name, email, joining_date, salary, timing, subjects} = teacher;
 
     const [hover, setHover] = useState(false)
 
@@ -85,7 +85,6 @@ const TeacherCard = ({ teacher }) => {
               </List>
             </Box>
           </Box>
-
           <Box>
             <List sx={{display: 'flex',fontSize: '10px', padding: 0, gap: 2}}>
               {subjects.map((subject, index) => (
@@ -98,6 +97,7 @@ const TeacherCard = ({ teacher }) => {
             </List>
           </Box>
         </Card>
+        
     )
 }
 
