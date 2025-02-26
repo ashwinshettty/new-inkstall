@@ -363,7 +363,7 @@ const Students = () => {
     console.log('Saving student data:', studentData);
 
     try {
-      const response = await fetch('https://bc8b-2405-201-16-f22a-f470-6fb3-c5f0-b81a.ngrok-free.app', {
+      const response = await fetch('/api/students', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
