@@ -16,6 +16,8 @@ import TodaysAttendance from "./components/TodaysAttendance";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TestSubmission from "./components/TestSubmission";
+import StudentsDatabase from "./components/StudentsDatabase";
+import StudentPerformance from "./components/StudentPerformance";
 
 const App = () => {
   return (
@@ -47,8 +49,10 @@ const App = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="/daily-updates" element={<DailyUpdates />} />
             <Route path="/test-submission" element={<TestSubmission />} />
-
+            <Route path="/student-performance" element={<StudentPerformance/>} />
+ 
             <Route path="/students" element={<StudentForm />} />
+            <Route path ="/students-database" element ={<StudentsDatabase/>} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>

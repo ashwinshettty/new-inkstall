@@ -4,7 +4,7 @@ import { Box, Drawer, List, ListItem, ListItemIcon, Typography, Divider, Button,
 import MenuIcon from "@mui/icons-material/Menu";
 import { IoHomeOutline } from "react-icons/io5";
 import { MdOutlineTaskAlt } from "react-icons/md";
-import { FaRegBell } from "react-icons/fa";
+import { FaDatabase, FaRegBell } from "react-icons/fa";
 import { GrUserSettings } from "react-icons/gr";
 import { LiaUserSolid } from "react-icons/lia";
 import { TbLogout } from "react-icons/tb";
@@ -68,7 +68,7 @@ const Layout = () => {
       text: "Student Performance",
       icon: <HiOutlineChartBar />,
       path: "/student-performance",
-      allowedRoles: ['admin', 'superadmin']
+      allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
       text: "Admin",
@@ -93,6 +93,12 @@ const Layout = () => {
       icon: <LiaUserSolid />,
       path: "/students",
       allowedRoles: ['admin', 'superadmin']
+    },
+    {
+      text: "Students Database",
+      icon : <FaDatabase/>,
+      path: "/students-database",
+      allowedRoles: ['admin', 'superadmin','teacher']
     }
   ];
 
