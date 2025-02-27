@@ -30,9 +30,15 @@ const MyAttendance = () => {
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
-        const response = await api.get("/attendance/my-attendance"); // Ensure backend sends the correct status
+        const response = await api.get("/attendance/my-attendance");
   
-        const formattedData = response.data.map((attendance) => ({
+        // 1. Sort the response data so that latest date appears first
+        const sortedData = response.data.sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+  
+        // 2. Format the sorted data
+        const formattedData = sortedData.map((attendance) => ({
           ...attendance,
           date: new Date(attendance.date).toLocaleDateString(),
           dayOfWeek: new Date(attendance.date).toLocaleDateString("en-US", {
@@ -41,19 +47,23 @@ const MyAttendance = () => {
           checkIn: attendance.punchIn
             ? {
                 time: new Date(attendance.punchIn.time).toLocaleTimeString(),
-                location: attendance.punchIn.location?.address || "Unknown Location",
+                location:
+                  attendance.punchIn.location?.address || "Unknown Location",
               }
             : null,
           checkOut: attendance.punchOut
             ? {
                 time: new Date(attendance.punchOut.time).toLocaleTimeString(),
-                location: attendance.punchOut.location?.address || "Unknown Location",
+                location:
+                  attendance.punchOut.location?.address || "Unknown Location",
               }
             : null,
-          workingHours: attendance.workingHours > 0 ? `${attendance.workingHours} hrs` : "0",
-          status: attendance.status, // ✅ Use status from the backend instead of determining it here
+          workingHours:
+            attendance.workingHours > 0 ? `${attendance.workingHours} hrs` : "0",
+          status: attendance.status, // Use status directly from backend
         }));
   
+        // 3. Update state with sorted & formatted data
         setAttendanceData(formattedData);
       } catch (error) {
         console.error("Error fetching attendance data:", error);

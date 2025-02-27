@@ -1,7 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import dayjs from 'dayjs';
-import React, { useEffect, useState, useCallback } from 'react';
-import dayjs from 'dayjs';
+import React, { useEffect, useState, useCallback } from "react";
+import dayjs from "dayjs";
 import {
   Autocomplete,
   Box,
@@ -17,42 +15,66 @@ import {
   IconButton,
   InputLabel,
   FormControl,
-  InputAdornment
-} from '@mui/material';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-} from '@mui/material';
-import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import AddIcon from '@mui/icons-material/Add';
-import DownloadIcon from '@mui/icons-material/Download';
-import UploadIcon from '@mui/icons-material/Upload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import MainFrame from './ui/MainFrame';
+  InputAdornment,
+} from "@mui/material";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import AddIcon from "@mui/icons-material/Add";
+import DownloadIcon from "@mui/icons-material/Download";
+import UploadIcon from "@mui/icons-material/Upload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MainFrame from "./ui/MainFrame";
 import { FiSave } from "react-icons/fi";
-import api from '../api';
+import api from "../api";
 
 const allSubjectsList = [
-  { name: 'Mathematics', fee: 3000, days: 2 },
-  { name: 'Physics', fee: 2500, days: 2 },
-  { name: 'Chemistry', fee: 2500, days: 2 },
-  { name: 'Biology', fee: 2500, days: 2 },
-  { name: 'English', fee: 2000, days: 1 },
-  { name: 'Economics', fee: 2000, days: 1 }
+  { name: "Mathematics", fee: 3000, days: 2 },
+  { name: "Physics", fee: 2500, days: 2 },
+  { name: "Chemistry", fee: 2500, days: 2 },
+  { name: "Biology", fee: 2500, days: 2 },
+  { name: "English", fee: 2000, days: 1 },
+  { name: "Economics", fee: 2000, days: 1 },
 ];
 
-const grades = ['Playschool', 'Nurserry', 'Jr. KG', 'Sr. KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15'];
-const branches = ['Goregoan West', 'Goregoan East', 'Online', 'Borivali', 'Kandivali', 'Others'];
-const boards = ['IGCSE', 'CBSE', 'SSC', 'NIOS', 'IB', 'AS/A IBDP', 'Others'];
-const admissionStatus = ['Admission Due', 'Active', 'Inactive', 'Completed'];
+const grades = [
+  "Playschool",
+  "Nurserry",
+  "Jr. KG",
+  "Sr. KG",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+];
+const branches = [
+  "Goregoan West",
+  "Goregoan East",
+  "Online",
+  "Borivali",
+  "Kandivali",
+  "Others",
+];
+const boards = ["IGCSE", "CBSE", "SSC", "NIOS", "IB", "AS/A IBDP", "Others"];
+const admissionStatus = ["Admission Due", "Active", "Inactive", "Completed"];
 
 const Students = () => {
-  // Student basic info states (now controlled)
-  const [studentName, setStudentName] = useState('');
+  // Student basic info states
+  const [studentName, setStudentName] = useState("");
   const [studentGrade, setStudentGrade] = useState(grades[0]);
   const [studentBranch, setStudentBranch] = useState(branches[0]);
   const [studentBoard, setStudentBoard] = useState(boards[0]);
-  const [schoolName, setSchoolName] = useState('');
+  const [schoolName, setSchoolName] = useState("");
   const [status, setStatus] = useState(admissionStatus[0]);
 
   // Fee settings state
@@ -64,41 +86,23 @@ const Students = () => {
   const [showUSD, setShowUSD] = useState(false);
   const [usdRate, setUsdRate] = useState(null);
 
+  // New state for custom total amount (if provided, the fee breakdown gets scaled)
+  const [customTotalAmount, setCustomTotalAmount] = useState("");
+
   // Subjects state – each subject now has its own start and end dates
   const [selectedSubjects, setSelectedSubjects] = useState([
-    { 
-      subject: '',
+    {
+      subject: "",
       startDate: null,
-      endDate: null
-      endDate: null
-    }
+      endDate: null,
+    },
   ]);
 
   // Phone numbers state
   const [phoneNumbers, setPhoneNumbers] = useState([
-    { id: 1, number: '', relation: '', name: '' }
+    { id: 1, number: "", relation: "", name: "" },
   ]);
 
-  // Fee breakdown state (calculated using integrated logic)
-  const [feeBreakdown, setFeeBreakdown] = useState(null);
-
-  // Handle scholarship toggle
-  const handleScholarshipToggle = (enabled) => {
-    setScholarshipEnabled(enabled);
-    if (enabled) {
-      setScholarshipPercent(10); // default 10%
-    }
-  };
-
-  // Handle one-to-one toggle
-  const handleOneToOneToggle = (enabled) => {
-    setOneToOneEnabled(enabled);
-    if (enabled) {
-      setOneToOnePercent(10); // default 10%
-    }
-  };
-
-  // Phone number handlers
   // Fee breakdown state (calculated using integrated logic)
   const [feeBreakdown, setFeeBreakdown] = useState(null);
 
@@ -122,75 +126,64 @@ const Students = () => {
   const handleAddPhoneNumber = () => {
     setPhoneNumbers([
       ...phoneNumbers,
-      { 
+      {
         id: phoneNumbers.length + 1,
-        number: '',
-        relation: '',
-        name: ''
-      }
+        number: "",
+        relation: "",
+        name: "",
+      },
     ]);
   };
 
   const handleRemovePhoneNumber = (id) => {
-    setPhoneNumbers(phoneNumbers.filter(phone => phone.id !== id));
+    setPhoneNumbers(phoneNumbers.filter((phone) => phone.id !== id));
   };
 
   const handlePhoneNumberChange = (id, field, value) => {
-    setPhoneNumbers(phoneNumbers.map(phone => 
-      phone.id === id ? { ...phone, [field]: value } : phone
-    ));
+    setPhoneNumbers(
+      phoneNumbers.map((phone) =>
+        phone.id === id ? { ...phone, [field]: value } : phone
+      )
+    );
   };
 
-  // Subjects handlers
   // Subjects handlers
   const handleAddSubject = () => {
     setSelectedSubjects([
       ...selectedSubjects,
-      { subject: '', startDate: null, endDate: null }
-      { subject: '', startDate: null, endDate: null }
+      { subject: "", startDate: null, endDate: null },
     ]);
   };
 
   const handleRemoveSubject = (index) => {
     const newSubjects = selectedSubjects.filter((_, i) => i !== index);
     if (newSubjects.length === 0) {
-      newSubjects.push({ subject: '', startDate: null, endDate: null });
-      newSubjects.push({ subject: '', startDate: null, endDate: null });
+      newSubjects.push({ subject: "", startDate: null, endDate: null });
     }
     setSelectedSubjects(newSubjects);
   };
 
   const handleSubjectChange = (index, field, value) => {
     const newSubjects = [...selectedSubjects];
-    if (field === 'subject') {
-      newSubjects[index] = { ...newSubjects[index], subject: value };
+    if (field === "subject") {
       newSubjects[index] = { ...newSubjects[index], subject: value };
     } else {
-      // For startDate/endDate changes
-      newSubjects[index] = { ...newSubjects[index], [field]: value };
-      // For startDate/endDate changes
       newSubjects[index] = { ...newSubjects[index], [field]: value };
     }
     setSelectedSubjects(newSubjects);
   };
 
   // Fetch USD rate if needed
-  // Fetch USD rate if needed
   useEffect(() => {
     if (showUSD && !usdRate) {
-      fetch('https://api.exchangerate-api.com/v4/latest/USD')
-        .then(response => response.json())
-        .then(data => {
-          const rate = data.rates.INR;
-          setUsdRate(rate * 1.03); // 3% markup
+      fetch("https://api.exchangerate-api.com/v4/latest/USD")
+        .then((response) => response.json())
+        .then((data) => {
           const rate = data.rates.INR;
           setUsdRate(rate * 1.03); // 3% markup
         })
-        .catch(error => {
-          console.error('Error fetching USD rate:', error);
-          setShowUSD(false);
-        });
-          console.error('Error fetching USD rate:', error);
+        .catch((error) => {
+          console.error("Error fetching USD rate:", error);
           setShowUSD(false);
         });
     }
@@ -210,16 +203,18 @@ const Students = () => {
   const calculateInstallments = (totalAmount, startDate) => {
     const installmentCount = 3;
     const installmentAmount = Math.round(totalAmount / installmentCount);
-    const remainingAmount = totalAmount - installmentAmount * (installmentCount - 1);
+    const remainingAmount =
+      totalAmount - installmentAmount * (installmentCount - 1);
     const startDateObj = new Date(startDate);
     const installments = [];
     for (let i = 0; i < installmentCount; i++) {
       const dueDate = new Date(startDateObj);
       dueDate.setMonth(startDateObj.getMonth() + i);
       installments.push({
-        amount: i === installmentCount - 1 ? remainingAmount : installmentAmount,
-        dueDate: dueDate.toISOString().split('T')[0],
-        paid: false
+        amount:
+          i === installmentCount - 1 ? remainingAmount : installmentAmount,
+        dueDate: dueDate.toISOString().split("T")[0],
+        paid: false,
       });
     }
     return installments;
@@ -229,21 +224,30 @@ const Students = () => {
   const integratedCalculateFees = useCallback(() => {
     // Determine base rate based on branch and board
     let baseRate;
-    if (studentBranch === 'Online') {
+    if (studentBranch === "Online") {
       baseRate = 1500;
     } else {
       switch (studentBoard) {
-        case 'IGCSE': baseRate = 1200; break;
-        case 'IB': baseRate = 2500; break;
-        case 'NIOS': baseRate = 3000; break;
-        case 'CBSE':
-        case 'SSC': baseRate = 800; break;
-        default: baseRate = 800;
+        case "IGCSE":
+          baseRate = 1200;
+          break;
+        case "IB":
+          baseRate = 2500;
+          break;
+        case "NIOS":
+          baseRate = 3000;
+          break;
+        case "CBSE":
+        case "SSC":
+          baseRate = 800;
+          break;
+        default:
+          baseRate = 800;
       }
     }
     // Grade multiplier: early grades get no multiplier; numeric grades > 1 get a factor
     let gradeMultiplier = 1;
-    const earlyGrades = ['Playschool', 'Nurserry', 'Jr. KG', 'Sr. KG', '1'];
+    const earlyGrades = ["Playschool", "Nurserry", "Jr. KG", "Sr. KG", "1"];
     if (!earlyGrades.includes(studentGrade)) {
       const gradeNum = parseInt(studentGrade);
       if (!isNaN(gradeNum) && gradeNum > 1) {
@@ -253,52 +257,111 @@ const Students = () => {
     const baseMonthlyRate = baseRate * gradeMultiplier;
 
     let subtotal = 0;
+    const subjectFees = [];
     // Calculate fee for each selected subject (if valid dates & subject chosen)
-    selectedSubjects.forEach(subject => {
+    selectedSubjects.forEach((subject) => {
       if (subject.startDate && subject.endDate && subject.subject) {
-        const days = dayjs(subject.endDate).diff(dayjs(subject.startDate), 'days') + 1;
+        const days =
+          dayjs(subject.endDate).diff(dayjs(subject.startDate), "days") + 1;
         let monthlyRate = baseMonthlyRate;
         if (oneToOneEnabled) {
           monthlyRate = baseMonthlyRate * (1 + oneToOnePercent / 100);
         }
         const dailyRate = monthlyRate / 30;
         const subjectFee = dailyRate * days;
+        subjectFees.push({
+          subject: subject.subject,
+          fee: Math.round(subjectFee),
+        });
         subtotal += subjectFee;
       }
     });
+    subtotal = Math.round(subtotal);
 
     // Apply a subject discount if 3 or more subjects are selected
     const subjectDiscountPercentage = selectedSubjects.length >= 3 ? 10 : 0;
-    const subjectDiscountAmount = Math.round(subtotal * (subjectDiscountPercentage / 100));
+    const subjectDiscountAmount = Math.round(
+      subtotal * (subjectDiscountPercentage / 100)
+    );
 
     // Scholarship discount if enabled
-    const scholarshipDiscountPercentage = scholarshipEnabled ? scholarshipPercent : 0;
-    const scholarshipDiscountAmount = Math.round(subtotal * (scholarshipDiscountPercentage / 100));
+    const scholarshipDiscountPercentage = scholarshipEnabled
+      ? scholarshipPercent
+      : 0;
+    const scholarshipDiscountAmount = Math.round(
+      subtotal * (scholarshipDiscountPercentage / 100)
+    );
 
-    const baseAmount = subtotal - subjectDiscountAmount - scholarshipDiscountAmount;
+    const baseAmount =
+      subtotal - subjectDiscountAmount - scholarshipDiscountAmount;
     const gstAmount = gstEnabled ? Math.round(baseAmount * 0.18) : 0;
-    const finalTotal = baseAmount + gstAmount;
+    let finalTotal = baseAmount + gstAmount;
 
     // Determine an installment start date (use the earliest subject startDate)
     let installmentStartDate = new Date();
     const validDates = selectedSubjects
-      .filter(s => s.startDate)
-      .map(s => new Date(s.startDate));
+      .filter((s) => s.startDate)
+      .map((s) => new Date(s.startDate));
     if (validDates.length > 0) {
       installmentStartDate = new Date(Math.min(...validDates));
     }
-    const installments = calculateInstallments(finalTotal, installmentStartDate);
+    let installments = calculateInstallments(finalTotal, installmentStartDate);
 
-    return {
-      subtotal: Math.round(subtotal),
-      subjectDiscount: { percentage: subjectDiscountPercentage, amount: subjectDiscountAmount },
-      scholarshipDiscount: { percentage: scholarshipDiscountPercentage, amount: scholarshipDiscountAmount },
-      baseAmount: Math.round(baseAmount),
+    // Prepare the initial breakdown object
+    let breakdown = {
+      subjectFees,
+      subtotal,
+      subjectDiscount: {
+        percentage: subjectDiscountPercentage,
+        amount: subjectDiscountAmount,
+      },
+      scholarshipDiscount: {
+        percentage: scholarshipDiscountPercentage,
+        amount: scholarshipDiscountAmount,
+      },
+      baseAmount,
       gstAmount,
       finalTotal,
-      installments
+      installments,
     };
-  }, [selectedSubjects, studentBoard, studentBranch, studentGrade, oneToOneEnabled, oneToOnePercent, gstEnabled, scholarshipEnabled, scholarshipPercent]);
+
+    // If a custom total amount is provided, ignore discounts, GST, and 1:1.
+    // Just split the custom total evenly among all subjects.
+    if (customTotalAmount && !isNaN(customTotalAmount)) {
+      const customTotal = parseFloat(customTotalAmount);
+      if (customTotal > 0) {
+        const subjectCount = breakdown.subjectFees.length || 1; // Prevent division by zero.
+        const share = Math.round(customTotal / subjectCount);
+
+        breakdown.subjectFees = breakdown.subjectFees.map((s) => ({
+          subject: s.subject,
+          fee: share,
+        }));
+        breakdown.subtotal = customTotal;
+        breakdown.subjectDiscount = { percentage: 0, amount: 0 };
+        breakdown.scholarshipDiscount = { percentage: 0, amount: 0 };
+        breakdown.baseAmount = customTotal;
+        breakdown.gstAmount = 0;
+        breakdown.finalTotal = customTotal;
+        breakdown.installments = calculateInstallments(
+          customTotal,
+          installmentStartDate
+        );
+      }
+    }
+    return breakdown;
+  }, [
+    selectedSubjects,
+    studentBoard,
+    studentBranch,
+    studentGrade,
+    oneToOneEnabled,
+    oneToOnePercent,
+    gstEnabled,
+    scholarshipEnabled,
+    scholarshipPercent,
+    customTotalAmount,
+  ]);
 
   // Recalculate fees whenever relevant fields change
   useEffect(() => {
@@ -315,25 +378,33 @@ const Students = () => {
     }
   };
 
-  // Helper function to compute fee for an individual subject
+  // Helper function to compute fee for an individual subject (if needed separately)
   const computeSubjectFee = (subjectItem) => {
     if (subjectItem.startDate && subjectItem.endDate && subjectItem.subject) {
-      // Determine base rate based on branch and board
       let baseRate;
-      if (studentBranch === 'Online') {
+      if (studentBranch === "Online") {
         baseRate = 1500;
       } else {
         switch (studentBoard) {
-          case 'IGCSE': baseRate = 1200; break;
-          case 'IB': baseRate = 2500; break;
-          case 'NIOS': baseRate = 3000; break;
-          case 'CBSE':
-          case 'SSC': baseRate = 800; break;
-          default: baseRate = 800;
+          case "IGCSE":
+            baseRate = 1200;
+            break;
+          case "IB":
+            baseRate = 2500;
+            break;
+          case "NIOS":
+            baseRate = 3000;
+            break;
+          case "CBSE":
+          case "SSC":
+            baseRate = 800;
+            break;
+          default:
+            baseRate = 800;
         }
       }
       let gradeMultiplier = 1;
-      const earlyGrades = ['Playschool', 'Nurserry', 'Jr. KG', 'Sr. KG', '1'];
+      const earlyGrades = ["Playschool", "Nurserry", "Jr. KG", "Sr. KG", "1"];
       if (!earlyGrades.includes(studentGrade)) {
         const gradeNum = parseInt(studentGrade);
         if (!isNaN(gradeNum) && gradeNum > 1) {
@@ -346,7 +417,9 @@ const Students = () => {
         monthlyRate = baseMonthlyRate * (1 + oneToOnePercent / 100);
       }
       const dailyRate = monthlyRate / 30;
-      const days = dayjs(subjectItem.endDate).diff(dayjs(subjectItem.startDate), 'days') + 1;
+      const days =
+        dayjs(subjectItem.endDate).diff(dayjs(subjectItem.startDate), "days") +
+        1;
       const subjectFee = dailyRate * days;
       return Math.round(subjectFee);
     }
@@ -355,22 +428,26 @@ const Students = () => {
 
   // Modified save handler to send data to the backend
   const handleSaveStudent = async () => {
-    // Prepare subjects array with the required fields
-    const preparedSubjects = selectedSubjects.map(s => ({
+    const preparedSubjects = selectedSubjects.map((s, index) => ({
       name: s.subject,
-      total: computeSubjectFee(s),
+      // If a custom total is provided, use the fee from feeBreakdown.subjectFees.
+      // Otherwise, fall back to computeSubjectFee.
+      total:
+        customTotalAmount && feeBreakdown && feeBreakdown.subjectFees[index]
+          ? feeBreakdown.subjectFees[index].fee
+          : computeSubjectFee(s),
       startDate: s.startDate ? s.startDate.toISOString() : new Date().toISOString(),
-      endDate: s.endDate ? s.endDate.toISOString() : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+      endDate: s.endDate
+        ? s.endDate.toISOString()
+        : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
     }));
 
-    // Map phone numbers to include relationName instead of name
-    const preparedPhoneNumbers = phoneNumbers.map(p => ({
+    const preparedPhoneNumbers = phoneNumbers.map((p) => ({
       number: p.number,
       relation: p.relation.toLowerCase(),
-      relationName: p.name
+      relationName: p.name,
     }));
 
-    // Prepare fee configuration using feeBreakdown and fee settings
     const feeConfig = {
       basePrice: feeBreakdown?.subtotal || 0,
       gstApplied: gstEnabled,
@@ -381,68 +458,93 @@ const Students = () => {
       scholarshipAmount: feeBreakdown?.scholarshipDiscount.amount || 0,
       oneToOneApplied: oneToOneEnabled,
       oneToOnePercentage: oneToOneEnabled ? oneToOnePercent : 0,
-      oneToOneAmount: oneToOneEnabled ? Math.round((feeBreakdown?.subtotal || 0) * (oneToOnePercent / 100)) : 0,
+      oneToOneAmount: oneToOneEnabled
+        ? Math.round((feeBreakdown?.subtotal || 0) * (oneToOnePercent / 100))
+        : 0,
       baseAmount: feeBreakdown?.baseAmount || 0,
-      totalAmount: feeBreakdown?.finalTotal || 0
+      totalAmount: feeBreakdown?.finalTotal || 0,
     };
+
+    const validStatuses = ["admissiondue", "active", "inactive", "completed"];
+    const studentStatus = validStatuses.includes(status?.toLowerCase())
+      ? status.toLowerCase()
+      : "admissiondue";
 
     const studentData = {
       studentName,
       grade: studentGrade,
       branch: studentBranch,
-      board: studentBoard,
+      board: studentBoard?.toUpperCase(),
       school: schoolName,
-      status: status.toLowerCase().replace(/\s/g, ''), // Converts "Admission Due" → "admissiondue"
+      status: studentStatus,
       subjects: preparedSubjects,
       phoneNumbers: preparedPhoneNumbers,
-      feeConfig
-      // Note: The photo is not sent since the backend does not currently process file uploads.
+      feeConfig,
     };
 
-    console.log('Saving student data:', studentData);
-const token = localStorage.getItem('token'); // Or retrieve it from wherever it's stored
+    console.log("Saving student data:", studentData);
+
     try {
-      const response = await fetch('http://localhost:4000/api/students', {
-        method: 'POST',
+      const response = await api.post("/students", studentData, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-          // Include any authorization headers if needed.
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(studentData)
       });
-      const data = await response.json();
-      if (response.ok) {
-        alert('Student saved successfully!');
-        // Optionally, clear the form or update UI state here.
+
+      if (response.status === 200 || response.status === 201) {
+        alert("Student saved successfully!");
       } else {
-        alert('Error saving student: ' + data.message);
+        alert("Error saving student: " + response.data.message);
       }
     } catch (error) {
-      console.error('Error saving student:', error);
-      alert('Error saving student');
+      console.error("Error saving student:", error);
+      if (error.response) {
+        alert(
+          "Error saving student: " +
+            (error.response.data.message || error.response.statusText)
+        );
+      } else {
+        alert("Error saving student");
+      }
     }
   };
 
   return (
     <MainFrame sx={{ p: 3 }}>
       {/* Header with action buttons */}
-      {/* Header with action buttons */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'bold', color: '#1a237e' }}>
+      <Box sx={{ mb: 4, display: "flex", alignItems: "center", gap: 2 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            fontWeight: "bold",
+            color: "#1a237e",
+          }}
+        >
           <AddIcon /> Add New Students
         </Typography>
         <Box sx={{ flex: 1 }} />
-        <Button variant="contained" startIcon={<DownloadIcon />} sx={{ bgcolor: '#4a90e2', color: '#964b00', borderRadius: '8px' }}>
-        <Button variant="contained" startIcon={<DownloadIcon />} sx={{ bgcolor: '#4a90e2', color: '#964b00', borderRadius: '8px' }}>
+        <Button
+          variant="contained"
+          startIcon={<DownloadIcon />}
+          sx={{ bgcolor: "#4a90e2", color: "#964b00", borderRadius: "8px" }}
+        >
           Download Template
         </Button>
-        <Button variant="contained" startIcon={<UploadIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
-        <Button variant="contained" startIcon={<UploadIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
+        <Button
+          variant="contained"
+          startIcon={<UploadIcon />}
+          sx={{ bgcolor: "#fecc00", color: "#964b00", borderRadius: "8px" }}
+        >
           Upload Excel
         </Button>
-        <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
-        <Button variant="contained" startIcon={<AddIcon />} sx={{ bgcolor: '#fecc00', color: '#964b00', borderRadius: '8px' }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{ bgcolor: "#fecc00", color: "#964b00", borderRadius: "8px" }}
+        >
           Add Manually
         </Button>
       </Box>
@@ -457,8 +559,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             required
             value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
-            value={studentName}
-            onChange={(e) => setStudentName(e.target.value)}
             placeholder="Enter student name"
           />
         </Grid>
@@ -469,8 +569,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             label="Grade"
             size="small"
             required
-            value={studentGrade}
-            onChange={(e) => setStudentGrade(e.target.value)}
             value={studentGrade}
             onChange={(e) => setStudentGrade(e.target.value)}
           >
@@ -490,8 +588,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             required
             value={studentBranch}
             onChange={(e) => setStudentBranch(e.target.value)}
-            value={studentBranch}
-            onChange={(e) => setStudentBranch(e.target.value)}
           >
             {branches.map((branch) => (
               <MenuItem key={branch} value={branch}>
@@ -508,8 +604,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             placeholder="Enter school name"
             value={schoolName}
             onChange={(e) => setSchoolName(e.target.value)}
-            value={schoolName}
-            onChange={(e) => setSchoolName(e.target.value)}
           />
         </Grid>
         <Grid item xs={12} md={4}>
@@ -519,8 +613,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             label="Board"
             size="small"
             required
-            value={studentBoard}
-            onChange={(e) => setStudentBoard(e.target.value)}
             value={studentBoard}
             onChange={(e) => setStudentBoard(e.target.value)}
           >
@@ -539,8 +631,6 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             size="small"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
           >
             {admissionStatus.map((status) => (
               <MenuItem key={status} value={status}>
@@ -551,49 +641,51 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
         </Grid>
 
         {/* Fee Settings */}
-        {/* Fee Settings */}
         <Grid item xs={12}>
-          <Box sx={{ bgcolor: '#f5f5f5', borderRadius: 1, p: 2, width: '100%' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Fee Settings</Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <Box
+            sx={{ bgcolor: "#f5f5f5", borderRadius: 1, p: 2, width: "100%" }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Fee Settings
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+              }}
+            >
               {/* GST */}
               <FormControlLabel
                 control={
-                  <Switch 
-                    size="medium" 
+                  <Switch
+                    size="medium"
                     checked={gstEnabled}
                     onChange={(e) => setGstEnabled(e.target.checked)}
                   />
                 }
                 label={<Typography variant="body2">GST</Typography>}
-                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                sx={{
+                  "& .MuiFormControlLabel-label": { fontSize: "0.875rem" },
+                }}
               />
               {/* Scholarship */}
-              {/* GST */}
-              <FormControlLabel
-                control={
-                  <Switch 
-                    size="medium" 
-                    checked={gstEnabled}
-                    onChange={(e) => setGstEnabled(e.target.checked)}
-                  />
-                }
-                label={<Typography variant="body2">GST</Typography>}
-                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
-              />
-              {/* Scholarship */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <FormControlLabel
                   control={
-                    <Switch 
-                      size="medium" 
+                    <Switch
+                      size="medium"
                       checked={scholarshipEnabled}
-                      onChange={(e) => handleScholarshipToggle(e.target.checked)}
+                      onChange={(e) =>
+                        handleScholarshipToggle(e.target.checked)
+                      }
                     />
                   }
                   label={<Typography variant="body2">Scholarship</Typography>}
-                  label={<Typography variant="body2">Scholarship</Typography>}
-                  sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                  sx={{
+                    "& .MuiFormControlLabel-label": { fontSize: "0.875rem" },
+                  }}
                 />
                 {scholarshipEnabled && (
                   <Select
@@ -602,26 +694,28 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                     onChange={(e) => setScholarshipPercent(e.target.value)}
                     sx={{ minWidth: 80, height: 32 }}
                   >
-                    {[10, 20, 30, 40, 50].map(percent => (
-                      <MenuItem key={percent} value={percent}>{percent}%</MenuItem>
+                    {[10, 20, 30, 40, 50].map((percent) => (
+                      <MenuItem key={percent} value={percent}>
+                        {percent}%
+                      </MenuItem>
                     ))}
                   </Select>
                 )}
               </Box>
               {/* 1:1 */}
-              {/* 1:1 */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <FormControlLabel
                   control={
-                    <Switch 
-                      size="medium" 
+                    <Switch
+                      size="medium"
                       checked={oneToOneEnabled}
                       onChange={(e) => handleOneToOneToggle(e.target.checked)}
                     />
                   }
                   label={<Typography variant="body2">1:1</Typography>}
-                  label={<Typography variant="body2">1:1</Typography>}
-                  sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                  sx={{
+                    "& .MuiFormControlLabel-label": { fontSize: "0.875rem" },
+                  }}
                 />
                 {oneToOneEnabled && (
                   <Select
@@ -630,35 +724,29 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                     onChange={(e) => setOneToOnePercent(e.target.value)}
                     sx={{ minWidth: 80, height: 32 }}
                   >
-                    {Array.from({ length: 20 }, (_, i) => (i + 1) * 10).map(percent => (
-                      <MenuItem key={percent} value={percent}>{percent}%</MenuItem>
-                    ))}
+                    {Array.from({ length: 20 }, (_, i) => (i + 1) * 10).map(
+                      (percent) => (
+                        <MenuItem key={percent} value={percent}>
+                          {percent}%
+                        </MenuItem>
+                      )
+                    )}
                   </Select>
                 )}
               </Box>
               {/* USD */}
               <FormControlLabel
                 control={
-                  <Switch 
-                    size="medium" 
+                  <Switch
+                    size="medium"
                     checked={showUSD}
                     onChange={(e) => setShowUSD(e.target.checked)}
                   />
                 }
                 label={<Typography variant="body2">$</Typography>}
-                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
-              />
-              {/* USD */}
-              <FormControlLabel
-                control={
-                  <Switch 
-                    size="medium" 
-                    checked={showUSD}
-                    onChange={(e) => setShowUSD(e.target.checked)}
-                  />
-                }
-                label={<Typography variant="body2">$</Typography>}
-                sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                sx={{
+                  "& .MuiFormControlLabel-label": { fontSize: "0.875rem" },
+                }}
               />
             </Box>
           </Box>
@@ -667,107 +755,173 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
         {/* Subjects Selection with date pickers */}
         <Grid item xs={12} md={12} sx={{ mt: 1 }}>
           <Grid container justifyContent="space-between" alignItems="center">
-        {/* Subjects Selection with date pickers */}
-        <Grid item xs={12} md={12} sx={{ mt: 1 }}>
-          <Grid container justifyContent="space-between" alignItems="center">
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Subjects <Typography component="span" color="error">*</Typography>
+              Subjects{" "}
+              <Typography component="span" color="error">
+                *
+              </Typography>
             </Typography>
             <Button
               variant="text"
               startIcon={<AddIcon />}
               size="small"
-              sx={{ color: 'primary.main' }}
+              sx={{ color: "primary.main" }}
               onClick={handleAddSubject}
             >
               Add Subject
             </Button>
           </Grid>
           {selectedSubjects.map((subjectItem, index) => (
-            <Grid container spacing={2} key={index} sx={{ mt: 1, mb: 1, alignItems: 'center' }}>
-              <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', width: '40%' }}>
-            <Grid container spacing={2} key={index} sx={{ mt: 1, mb: 1, alignItems: 'center' }}>
-              <Box sx={{ ml: 2, display: 'flex', alignItems: 'center', width: '40%' }}>
+            <Grid
+              container
+              spacing={2}
+              key={index}
+              sx={{ mt: 1, mb: 1, alignItems: "center" }}
+            >
+              <Box
+                sx={{
+                  ml: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  width: "40%",
+                }}
+              >
                 <FormControl fullWidth size="medium" required>
                   <InputLabel>Subject</InputLabel>
                   <Select
                     value={subjectItem.subject}
                     label="Subject"
-                    onChange={(e) => handleSubjectChange(index, 'subject', e.target.value)}
+                    onChange={(e) =>
+                      handleSubjectChange(index, "subject", e.target.value)
+                    }
                   >
                     {allSubjectsList
-                      .filter(s => 
-                        !selectedSubjects.some((sel, i) => sel.subject === s.name && i !== index)
-                    {allSubjectsList
-                      .filter(s => 
-                        !selectedSubjects.some((sel, i) => sel.subject === s.name && i !== index)
+                      .filter(
+                        (s) =>
+                          !selectedSubjects.some(
+                            (sel, i) => sel.subject === s.name && i !== index
+                          )
                       )
-                      .map(s => (
-                        <MenuItem key={s.name} value={s.name}>
-                          {s.name}
-                      .map(s => (
+                      .map((s) => (
                         <MenuItem key={s.name} value={s.name}>
                           {s.name}
                         </MenuItem>
-                      ))
-                    }
+                      ))}
                   </Select>
                 </FormControl>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'center', width: '25%' }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <Box sx={{ display: 'flex', justifyContent: 'center', width: '25%' }}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box
+                sx={{ display: "flex", justifyContent: "center", width: "25%" }}
+              >
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
                     label="Start Date"
                     value={subjectItem.startDate}
-                    onChange={(value) => handleSubjectChange(index, 'startDate', value)}
-                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
-                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
+                    onChange={(value) =>
+                      handleSubjectChange(index, "startDate", value)
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} size="small" fullWidth required />
+                    )}
                   />
                 </LocalizationProvider>
               </Box>
-              <Box sx={{ display: 'flex', width: '25%' }}>
-              <Box sx={{ display: 'flex', width: '25%' }}>
+              <Box sx={{ display: "flex", width: "25%" }}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DatePicker
                     label="End Date"
                     value={subjectItem.endDate}
-                    onChange={(value) => handleSubjectChange(index, 'endDate', value)}
-                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
-                    minDate={subjectItem.startDate || dayjs()}
-                    disabled={!subjectItem.startDate}
-                    renderInput={(params) => <TextField {...params} size="small" fullWidth required />}
+                    onChange={(value) =>
+                      handleSubjectChange(index, "endDate", value)
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} size="small" fullWidth required />
+                    )}
                     minDate={subjectItem.startDate || dayjs()}
                     disabled={!subjectItem.startDate}
                   />
                 </LocalizationProvider>
               </Box>
               <Box>
-                <IconButton size="small" onClick={() => handleRemoveSubject(index)} sx={{ color: 'error.main' }}>
-                <IconButton size="small" onClick={() => handleRemoveSubject(index)} sx={{ color: 'error.main' }}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemoveSubject(index)}
+                  sx={{ color: "error.main" }}
+                >
                   <DeleteIcon />
                 </IconButton>
               </Box>
             </Grid>
           ))}
         </Grid>
-          
-        {/* Fee Details (integrated fee breakdown) */}
-        {feeBreakdown && (
+
         {/* Fee Details (integrated fee breakdown) */}
         {feeBreakdown && (
           <Grid item xs={12}>
             <Box bgcolor="#f5f5f5" borderRadius={1} p={2}>
-              <Typography variant="h6" gutterBottom>Fee Details</Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="h6" gutterBottom>
+                Fee Details
+              </Typography>
+
+              {/* Custom Total Amount input */}
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  label="Custom Total Amount"
+                  type="number"
+                  size="small"
+                  value={customTotalAmount}
+                  onChange={(e) => setCustomTotalAmount(e.target.value)}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        {showUSD && usdRate ? "$" : "₹"}
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Typography variant="caption" color="textSecondary">
+                  Enter a custom total amount to adjust subject fees
+                  proportionally.
+                </Typography>
+              </Box>
+
+              {/* Display each subject's fee breakdown */}
+              {feeBreakdown.subjectFees.map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
+                  <Typography variant="body2">{item.subject}</Typography>
+                  <Typography variant="body2">
+                    {formatAmount(item.fee)}
+                  </Typography>
+                </Box>
+              ))}
+
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
                 <Typography variant="body2">Subtotal</Typography>
-                <Typography variant="body2">{formatAmount(feeBreakdown.subtotal)}</Typography>
+                <Typography variant="body2">
+                  {formatAmount(feeBreakdown.subtotal)}
+                </Typography>
               </Box>
               {feeBreakdown.subjectDiscount.amount > 0 && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
                   <Typography variant="body2">
-                    Multi-subject Discount ({feeBreakdown.subjectDiscount.percentage}%)
+                    Multi-subject Discount (
+                    {feeBreakdown.subjectDiscount.percentage}%)
                   </Typography>
                   <Typography variant="body2" color="error">
                     -{formatAmount(feeBreakdown.subjectDiscount.amount)}
@@ -775,28 +929,13 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 </Box>
               )}
               {feeBreakdown.scholarshipDiscount.amount > 0 && (
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2">Subtotal</Typography>
-                <Typography variant="body2">{formatAmount(feeBreakdown.subtotal)}</Typography>
-              </Box>
-              {feeBreakdown.subjectDiscount.amount > 0 && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">
-                    Multi-subject Discount ({feeBreakdown.subjectDiscount.percentage}%)
-                  </Typography>
-                  <Typography variant="body2" color="error">
-                    -{formatAmount(feeBreakdown.subjectDiscount.amount)}
-                  </Typography>
-                </Box>
-              )}
-              {feeBreakdown.scholarshipDiscount.amount > 0 && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2">
-                    Scholarship ({feeBreakdown.scholarshipDiscount.percentage}%)
-                  </Typography>
-                  <Typography variant="body2" color="error">
-                    -{formatAmount(feeBreakdown.scholarshipDiscount.amount)}
-                  </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
                   <Typography variant="body2">
                     Scholarship ({feeBreakdown.scholarshipDiscount.percentage}%)
                   </Typography>
@@ -805,42 +944,71 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                   </Typography>
                 </Box>
               )}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+              >
                 <Typography variant="body2">Base Amount</Typography>
-                <Typography variant="body2">{formatAmount(feeBreakdown.baseAmount)}</Typography>
+                <Typography variant="body2">
+                  {formatAmount(feeBreakdown.baseAmount)}
+                </Typography>
               </Box>
               {gstEnabled && (
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                  }}
+                >
                   <Typography variant="body2">GST (18%)</Typography>
-                  <Typography variant="body2">{formatAmount(feeBreakdown.gstAmount)}</Typography>
+                  <Typography variant="body2">
+                    {formatAmount(feeBreakdown.gstAmount)}
+                  </Typography>
                 </Box>
               )}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, pt: 1, borderTop: '2px solid #e0e0e0' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mt: 2,
+                  pt: 1,
+                  borderTop: "2px solid #e0e0e0",
+                }}
+              >
                 <Typography variant="subtitle2">Final Total</Typography>
-                <Typography variant="subtitle2">{formatAmount(feeBreakdown.finalTotal)}</Typography>
+                <Typography variant="subtitle2">
+                  {formatAmount(feeBreakdown.finalTotal)}
+                </Typography>
               </Box>
             </Box>
           </Grid>
         )}
 
         {/* Phone Numbers */}
-        <Grid item xs={12} container justifyContent="space-between" alignItems="center">
-        <Grid item xs={12} container justifyContent="space-between" alignItems="center">
+        <Grid
+          item
+          xs={12}
+          container
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Phone Numbers <Typography component="span" color="error">*</Typography>
+            Phone Numbers{" "}
+            <Typography component="span" color="error">
+              *
+            </Typography>
           </Typography>
           <Button
             variant="text"
             startIcon={<AddIcon />}
             size="small"
-            sx={{ color: 'primary.main' }}
+            sx={{ color: "primary.main" }}
             onClick={handleAddPhoneNumber}
           >
             Add Phone Number
           </Button>
         </Grid>
         {phoneNumbers.map((phone) => (
-          <Grid container spacing={2} key={phone.id} sx={{ mb: 2, ml: 1 }}>
           <Grid container spacing={2} key={phone.id} sx={{ mb: 2, ml: 1 }}>
             <Grid item xs={12} md={4}>
               <TextField
@@ -849,7 +1017,9 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 label="Number (with country code)"
                 required
                 value={phone.number}
-                onChange={(e) => handlePhoneNumberChange(phone.id, 'number', e.target.value)}
+                onChange={(e) =>
+                  handlePhoneNumberChange(phone.id, "number", e.target.value)
+                }
                 placeholder="+91XXXXXXXXXX"
               />
             </Grid>
@@ -859,18 +1029,31 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 <Select
                   value={phone.relation}
                   label="Relation"
-                  onChange={(e) => handlePhoneNumberChange(phone.id, 'relation', e.target.value)}
+                  onChange={(e) =>
+                    handlePhoneNumberChange(
+                      phone.id,
+                      "relation",
+                      e.target.value
+                    )
+                  }
                 >
-                  {['Father', 'Mother', 'Guardian', 'Self', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Grandfather', 'Grandmother', 'Other']
-                    .map(option => (
-                      <MenuItem key={option} value={option}>{option}</MenuItem>
-                    ))
-                  }
-                  {['Father', 'Mother', 'Guardian', 'Self', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Grandfather', 'Grandmother', 'Other']
-                    .map(option => (
-                      <MenuItem key={option} value={option}>{option}</MenuItem>
-                    ))
-                  }
+                  {[
+                    "Father",
+                    "Mother",
+                    "Guardian",
+                    "Self",
+                    "Brother",
+                    "Sister",
+                    "Uncle",
+                    "Aunt",
+                    "Grandfather",
+                    "Grandmother",
+                    "Other",
+                  ].map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -879,19 +1062,19 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
                 fullWidth
                 size="small"
                 label="Contact Person's Name"
-                label="Contact Person's Name"
                 required
                 value={phone.name}
-                onChange={(e) => handlePhoneNumberChange(phone.id, 'name', e.target.value)}
+                onChange={(e) =>
+                  handlePhoneNumberChange(phone.id, "name", e.target.value)
+                }
               />
             </Grid>
             <Grid item xs={12} md={1} container alignItems="center">
-            <Grid item xs={12} md={1} container alignItems="center">
               {phoneNumbers.length > 1 && (
-                <IconButton 
-                  size="small" 
+                <IconButton
+                  size="small"
                   onClick={() => handleRemovePhoneNumber(phone.id)}
-                  sx={{ color: 'error.main' }}
+                  sx={{ color: "error.main" }}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -910,27 +1093,23 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
             accept="image/*"
             onChange={handlePhotoChange}
             style={{
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              padding: '5px',
-              width: '100%',
-              backgroundColor: '#fff'
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              padding: "5px",
+              width: "100%",
+              backgroundColor: "#fff",
             }}
           />
         </Grid>
 
         {/* Save Button */}
         <Grid item xs={12}>
-        <Grid item xs={12}>
           <Button
             variant="contained"
             size="medium"
             fullWidth
             onClick={handleSaveStudent}
-            sx={{ mt: 2, backgroundColor: '#fecc00', color: '#964b00', gap: 1 }}
-          >
-            <FiSave /> Save Student
-            sx={{ mt: 2, backgroundColor: '#fecc00', color: '#964b00', gap: 1 }}
+            sx={{ mt: 2, backgroundColor: "#fecc00", color: "#964b00", gap: 1 }}
           >
             <FiSave /> Save Student
           </Button>
@@ -939,8 +1118,5 @@ const token = localStorage.getItem('token'); // Or retrieve it from wherever it'
     </MainFrame>
   );
 };
-  );
-};
 
-export default Students;
 export default Students;

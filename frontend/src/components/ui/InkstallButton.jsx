@@ -23,6 +23,7 @@ const InkstallButton = ({ texts, btnColor, visibility, onClick }) => {
   };
 
   const handleClick = async () => {
+    setIsPressed(true);
     try {
       setLoading(true);
       setError("");
@@ -41,6 +42,7 @@ const InkstallButton = ({ texts, btnColor, visibility, onClick }) => {
     } catch (error) {
       setError(error.message);
     } finally {
+      setIsPressed(false);
       setLoading(false);
     }
   };

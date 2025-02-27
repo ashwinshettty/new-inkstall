@@ -13,9 +13,24 @@ import Teachers from "./components/Teachers";
 import Settings from "./components/Settings";
 import StudentForm from "./components/Students";
 import TodaysAttendance from "./components/TodaysAttendance";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import TestSubmission from "./components/TestSubmission";
+
 const App = () => {
   return (
     <BrowserRouter>
+      {/* ToastContainer must be rendered to show toast notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -25,15 +40,16 @@ const App = () => {
           <Route element={<Layout />}>
             <Route index element={<TodaysAttendance />} />
             {/* <Route path="/dashboard" element={<MyAttendance />} /> */}
-            <Route path="/my-attendance" element={<MyAttendance/>}/>
-            {/* <Route path="/today-attendance" element={<TodaysAttendance/>}/> */}
-            <Route path="/settings" element={<Settings/>}/>
-            <Route path="/teachers" element={<Teachers/>}/>
-            <Route path="/admin" element={<Admin/>}/>
-            <Route path="/daily-updates" element={<DailyUpdates/>}/>
-            <Route path="/students" element={<StudentForm/>} />
-            <Route path="*" element={<NotFound />}/>
-            <Route path="*" element={<NotFound />}/>
+            <Route path="/my-attendance" element={<MyAttendance />} />
+            {/* <Route path="/today-attendance" element={<TodaysAttendance />} /> */}
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/teachers" element={<Teachers />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/daily-updates" element={<DailyUpdates />} />
+            <Route path="/test-submission" element={<TestSubmission />} />
+
+            <Route path="/students" element={<StudentForm />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Route>
       </Routes>

@@ -5,11 +5,13 @@ require('dotenv').config();
 const connectDB = require('./config/database');
 const corsOptions = require('./config/cors');
 const routes = require('./routes/index.routes');
+const dailyUpdateRoutes = require('./routes/dailyupdate.routes');
 const authRoutes = require('./routes/auth.routes');
 const teacherRoutes = require('./routes/teacher.routes');
 const studentRoutes = require('./routes/student.route');
 const leaveRequestRoutes = require('./routes/leaveRequest.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
+const testSubmissionRoutes = require('./routes/testsubmission.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -38,6 +40,9 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api/leave-requests', leaveRequestRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/daily-updates', dailyUpdateRoutes);
+app.use('/api/test-submissions', testSubmissionRoutes);  
+
 app.use('/', routes);
 
 // Error handling

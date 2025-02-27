@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { FormProvider, useForm, Controller } from 'react-hook-form';
-import { Box, Button, Grid, MenuItem, TextField, Typography } from '@mui/material';
-import { FiSave, FiUserPlus } from 'react-icons/fi';
-import MainFrame from './ui/MainFrame';
-import api from '../api';
-import AddTeacher from './AddTeacher';
-import AddStudents from './AddStudents';
-import dayjs from 'dayjs';
+import React, { useState } from "react";
+import { FormProvider, useForm, Controller } from "react-hook-form";
+import {
+  Box,
+  Button,
+  Grid,
+  MenuItem,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { FiSave, FiUserPlus } from "react-icons/fi";
+import MainFrame from "./ui/MainFrame";
+import api from "../api";
+import AddTeacher from "./AddTeacher";
+import AddStudents from "./AddStudents";
+import dayjs from "dayjs";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Settings = () => {
-  const [selectedRole, setSelectedRole] = useState('teacher');
+  const [selectedRole, setSelectedRole] = useState("teacher");
 
   const handleRoleChange = (event) => {
     setSelectedRole(event.target.value);
@@ -17,58 +26,99 @@ const Settings = () => {
 
   // Default working hours using keys startTime and endTime
   const defaultWorkingHours = {
-    monday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    tuesday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    wednesday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    thursday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    friday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    saturday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') },
-    sunday: { startTime: dayjs().set('hour', 9).set('minute', 0).format('HH:mm'), endTime: dayjs().set('hour', 17).set('minute', 0).format('HH:mm') }
+    monday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    tuesday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    wednesday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    thursday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    friday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    saturday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
+    sunday: {
+      startTime: dayjs().set("hour", 9).set("minute", 0).format("HH:mm"),
+      endTime: dayjs().set("hour", 17).set("minute", 0).format("HH:mm"),
+    },
   };
 
   // Initialize the form with default values matching the teacher schema.
   const methods = useForm({
     defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      role: '',
-      profilePhoto: null,       // For teacher profile photo
-      startingDate: '',         // Matches schema "startingDate"
-      aboutMe: '',              // Matches schema "aboutMe"
+      name: "",
+      email: "",
+      password: "",
+      role: "",
+      profilePhoto: null, // For teacher profile photo
+      startingDate: "", // Matches schema "startingDate"
+      aboutMe: "", // Matches schema "aboutMe"
       subjects: [],
-      document: null,           // Optional offer letter file
-      salary: { type: 'monthly', amount: '' }, // Combined salary field
-      workingHours: defaultWorkingHours
-    }
+      document: null, // Optional offer letter file
+      salary: { type: "monthly", amount: "" }, // Combined salary field
+      workingHours: defaultWorkingHours,
+    },
   });
 
-  const { handleSubmit } = methods;
+  const { handleSubmit, reset } = methods;
 
   const onSubmit = async (data) => {
-    // Set role from the dropdown selection.
+    // Set role from the dropdown selection
     data.role = selectedRole;
+  
     try {
-      const response = await api.post('/auth/users', data, {
-        headers: { 'Content-Type': 'application/json' }
+      const response = await api.post("/auth/users", data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
-      if (!response.ok) {
-        console.error('Error submitting the form', response.statusText);
-        return;
+  
+      console.log("User added successfully:", response.data);
+  
+      if (selectedRole === "teacher") {
+        toast.success("Teacher created successfully!");
+      } else {
+        const capitalizedRole = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
+        toast.success(`${capitalizedRole} created successfully!`);
       }
-      const result = await response.json();
-      console.log('User added successfully:', result);
+  
+      reset(); // Reset the form after success.
     } catch (error) {
-      console.error('Error during submission:', error);
+      console.error("Error during submission:", error);
+  
+      if (error.response && error.response.data && error.response.data.error) {
+        toast.error("Error: " + error.response.data.error);
+      } else if (error.response && error.response.statusText) {
+        toast.error("Error: " + error.response.statusText);
+      } else {
+        toast.error("Error: " + error.message);
+      }
     }
   };
 
   return (
     <MainFrame>
-      <Box sx={{ maxWidth: 1200, p: 4, mx: 'auto' }}>
-        <Box sx={{ mb: 4, display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box sx={{ maxWidth: 1200, p: 4, mx: "auto" }}>
+        <Box sx={{ mb: 4, display: "flex", gap: 1, alignItems: "center" }}>
           <FiUserPlus size={22} color="#1a237e" strokeWidth={2} />
-          <Typography variant="h6" component="h6" sx={{ color: '#1a237e', fontWeight: 600 }}>
+          <Typography
+            variant="h6"
+            component="h6"
+            sx={{ color: "#1a237e", fontWeight: 600 }}
+          >
             Add New {selectedRole}
           </Typography>
         </Box>
@@ -79,7 +129,7 @@ const Settings = () => {
                 <Controller
                   name="name"
                   control={methods.control}
-                  rules={{ required: 'Name is required' }}
+                  rules={{ required: "Name is required" }}
                   render={({ field, fieldState: { error } }) => (
                     <TextField
                       {...field}
@@ -87,17 +137,18 @@ const Settings = () => {
                       label="Full Name"
                       error={!!error}
                       helperText={error?.message}
-                      InputProps={{ sx: { '& input': { fontSize: '14px' } } }}
-                      InputLabelProps={{ sx: { fontSize: '14px' } }}
+                      InputProps={{ sx: { "& input": { fontSize: "14px" } } }}
+                      InputLabelProps={{ sx: { fontSize: "14px" } }}
                     />
                   )}
                 />
               </Grid>
+
               <Grid item xs={12} md={6}>
                 <Controller
                   name="email"
                   control={methods.control}
-                  rules={{ required: 'Email is required' }}
+                  rules={{ required: "Email is required" }}
                   render={({ field, fieldState: { error } }) => (
                     <TextField
                       {...field}
@@ -105,17 +156,18 @@ const Settings = () => {
                       label="Email Address"
                       error={!!error}
                       helperText={error?.message}
-                      InputProps={{ sx: { '& input': { fontSize: '14px' } } }}
-                      InputLabelProps={{ sx: { fontSize: '14px' } }}
+                      InputProps={{ sx: { "& input": { fontSize: "14px" } } }}
+                      InputLabelProps={{ sx: { fontSize: "14px" } }}
                     />
                   )}
                 />
               </Grid>
+
               <Grid item xs={12} md={6}>
                 <Controller
                   name="password"
                   control={methods.control}
-                  rules={{ required: 'Password is required' }}
+                  rules={{ required: "Password is required" }}
                   render={({ field, fieldState: { error } }) => (
                     <TextField
                       {...field}
@@ -124,12 +176,13 @@ const Settings = () => {
                       label="Password"
                       error={!!error}
                       helperText={error?.message}
-                      InputProps={{ sx: { '& input': { fontSize: '14px' } } }}
-                      InputLabelProps={{ sx: { fontSize: '14px' } }}
+                      InputProps={{ sx: { "& input": { fontSize: "14px" } } }}
+                      InputLabelProps={{ sx: { fontSize: "14px" } }}
                     />
                   )}
                 />
               </Grid>
+
               <Grid item xs={12} md={6}>
                 <TextField
                   select
@@ -148,8 +201,9 @@ const Settings = () => {
               </Grid>
             </Grid>
 
-            {selectedRole === 'teacher' && <AddTeacher />}
-            {selectedRole === 'student' && <AddStudents />}
+            {/* Conditionally render teacher or student-specific fields */}
+            {selectedRole === "teacher" && <AddTeacher />}
+            {selectedRole === "student" && <AddStudents />}
 
             <Box sx={{ pt: 4 }}>
               <Button
@@ -159,14 +213,15 @@ const Settings = () => {
                 type="submit"
                 sx={{
                   mt: 2,
-                  backgroundColor: '#fecc00',
-                  color: '#964b00',
+                  backgroundColor: "#fecc00",
+                  color: "#964b00",
                   gap: 1,
-                  margin: 0
+                  margin: 0,
                 }}
               >
                 <FiSave />
-                Save {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
+                Save{" "}
+                {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
               </Button>
             </Box>
           </Box>

@@ -9,9 +9,11 @@ import { GrUserSettings } from "react-icons/gr";
 import { LiaUserSolid } from "react-icons/lia";
 import { TbLogout } from "react-icons/tb";
 import { motion } from "framer-motion";
+import { LuClipboard } from "react-icons/lu";
 import pfp from "../../assets/Images/pfp.jpeg";
 import { useAuth } from "../../context/AuthContext";
 import { IoSettingsOutline } from "react-icons/io5";
+import { HiOutlineChartBar } from "react-icons/hi";
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -55,6 +57,18 @@ const Layout = () => {
       icon: <FaRegBell />,
       path: "/daily-updates",
       allowedRoles: ['admin', 'superadmin', 'teacher']
+    },
+    {
+      text: "Test Submission",
+      icon: <LuClipboard />,
+      path: "/test-submission",
+      allowedRoles: ['admin', 'superadmin', 'teacher']
+    },
+    {
+      text: "Student Performance",
+      icon: <HiOutlineChartBar />,
+      path: "/student-performance",
+      allowedRoles: ['admin', 'superadmin']
     },
     {
       text: "Admin",
