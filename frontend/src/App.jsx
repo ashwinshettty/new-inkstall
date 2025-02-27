@@ -13,6 +13,7 @@ import Teachers from "./components/Teachers";
 import Settings from "./components/Settings";
 import StudentForm from "./components/Students";
 import TodaysAttendance from "./components/TodaysAttendance";
+import TestSubmission from "./components/TestSubmission";
 const App = () => {
   return (
     <BrowserRouter>
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/teachers" element={<Teachers/>}/>
             <Route path="/admin" element={<Admin/>}/>
             <Route path="/daily-updates" element={<DailyUpdates/>}/>
+            <Route path="/test-submission" element={<TestSubmission/>}/>
             <Route path="/students" element={<StudentForm/>} />
             <Route path="*" element={<NotFound />}/>
             <Route path="*" element={<NotFound />}/>

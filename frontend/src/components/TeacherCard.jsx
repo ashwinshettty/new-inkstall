@@ -15,12 +15,21 @@ const TeacherCard = ({ teacher }) => {
       {text: timing, icon: <Clock9 size={16} />}
     ]
 
+    const viewProfile = () => {
+      console.log('View Profile')
+    }
+
+    const editProfile = () => {
+      console.log('Edit Profile')
+    }
+
     return (
         <Card sx={{
-            height: '19 0px',
+            height: '200px',
             width: '32%',
             display: 'flex',
             flexDirection: 'column',
+            justifyContent: 'space-between',
             p: 2,
             borderRadius: '10px',
             boxShadow: '0px 5px 15px 0px rgba(0,0,0,0.3)',
@@ -63,8 +72,8 @@ const TeacherCard = ({ teacher }) => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between'}}>
                 <Typography sx={{fontWeight: 'bold', fontSize: '18px', color: hover ? '#1a237e' : 'black'}}>{name}</Typography>
                 <Box sx={{ display: 'flex', gap: 1}}>
-                  <Eye size={21} cursor={'pointer'}/>
-                  <Pencil size={18} cursor={'pointer'} />
+                  <Eye size={21} cursor={'pointer'} onClick={viewProfile}/>
+                  <Pencil size={18} cursor={'pointer'} onClick={editProfile}/>
                 </Box>
               </Box>
               <List>
@@ -87,7 +96,7 @@ const TeacherCard = ({ teacher }) => {
           </Box>
 
           <Box>
-            <List sx={{display: 'flex',fontSize: '10px', padding: 0, gap: 2}}>
+            <List sx={{display: 'flex',fontSize: '10px', padding: 0, justifyContent: 'space-evenly'}}>
               {subjects.map((subject, index) => (
                 <Box sx={{border: '1px solid grey', borderRadius: '20px', padding: '3px', backgroundColor: hover ? 'white' : 'rgba(77,86,175,0.3)', color: hover ? '#1a237e' : 'black', }}>
                   <ListItem key={index} sx={{fontSize: '12px', padding: 0}}>

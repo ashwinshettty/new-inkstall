@@ -654,6 +654,7 @@ const Students = () => {
           <Grid item xs={12}>
             <Box bgcolor="#f5f5f5" borderRadius={1} p={2}>
               <Typography variant="h6" gutterBottom>Fee Details</Typography>
+              
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <Typography variant="body2">Subtotal</Typography>
                 <Typography variant="body2">{formatAmount(feeBreakdown.subtotal)}</Typography>

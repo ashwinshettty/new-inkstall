@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import pfp from "../../assets/Images/pfp.jpeg";
 import { useAuth } from "../../context/AuthContext";
 import { IoSettingsOutline } from "react-icons/io5";
+import { LuClipboard } from "react-icons/lu";
+
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -54,6 +56,12 @@ const Layout = () => {
       text: "Daily Updates",
       icon: <FaRegBell />,
       path: "/daily-updates",
+      allowedRoles: ['admin', 'superadmin', 'teacher']
+    },
+    {
+      text: "Test Submission",
+      icon: <LuClipboard />,
+      path: "/test-submission",
       allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
