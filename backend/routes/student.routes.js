@@ -159,7 +159,7 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
 });
 
 // Get all students
-router.get('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
+router.get('/', auth, authorize('admin', 'superadmin','teacher'), async (req, res) => {
     try {
         const students = await Student.find().sort({ createdAt: -1 });
         

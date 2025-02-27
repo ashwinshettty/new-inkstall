@@ -13,6 +13,7 @@ const leaveRequestRoutes = require('./routes/leaveRequest.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const subjectsRoutes = require('./routes/subjects.routes');
 const testSubmissionRoutes = require('./routes/testsubmission.routes');
+const uploadRoutes = require('./routes/upload.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/daily-updates', dailyUpdateRoutes);
 app.use('/api/test-submissions', testSubmissionRoutes);  
 app.use('/api/', subjectsRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/', routes);
 
 // Error handling

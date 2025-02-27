@@ -18,6 +18,8 @@ import "react-toastify/dist/ReactToastify.css";
 import TestSubmission from "./components/TestSubmission";
 import StudentsDatabase from "./components/StudentsDatabase";
 import StudentPerformance from "./components/StudentPerformance";
+import { StudentsProvider } from "./context/StudentContext";
+import { SubjectsProvider } from "./context/SubjectsContext";
 
 const App = () => {
   return (
@@ -37,9 +39,17 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         
-        {/* Protected Routes */}
+        {/* Protected Routes wrapped with context providers */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
+          <Route
+            element={
+              <StudentsProvider>
+                <SubjectsProvider>
+                  <Layout />
+                </SubjectsProvider>
+              </StudentsProvider>
+            }
+          >
             <Route index element={<TodaysAttendance />} />
             {/* <Route path="/dashboard" element={<MyAttendance />} /> */}
             <Route path="/my-attendance" element={<MyAttendance />} />
