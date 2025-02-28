@@ -15,7 +15,11 @@ import {
   MenuItem,
   Divider,
 } from "@mui/material";
-import { LocalizationProvider, TimePicker, DatePicker } from "@mui/x-date-pickers";
+import {
+  LocalizationProvider,
+  TimePicker,
+  DatePicker,
+} from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { Upload } from "lucide-react";
@@ -31,7 +35,8 @@ const AddTeacher = () => {
   const defaultEndTime = "17:00";
 
   // Fetch subjects from SubjectsContext instead of hardcoding them
-  const { subjects: subjectsData, loading: subjectsLoading } = useContext(SubjectsContext);
+  const { subjects: subjectsData, loading: subjectsLoading } =
+    useContext(SubjectsContext);
 
   // Days keys matching your schema
   const days = [
@@ -75,8 +80,11 @@ const AddTeacher = () => {
       });
 
       if (response.data.success) {
-        // Save the returned URL in form state so it can be saved in MongoDB later
-        setValue("profilePhotoUrl", response.data.url);
+        const fileName = response.data.fileName;
+        const directUrl = `https://drive.inkstall.us/remote.php/webdav/Photos/${encodeURIComponent(
+          response.data.fileName
+        )}`;
+        setValue("profilePhotourl", directUrl);
       } else {
         setUploadError(response.data.message || "Upload failed");
       }
@@ -147,14 +155,15 @@ const AddTeacher = () => {
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
-              {watch("profilePhotoUrl") ? "File Uploaded" : "Choose File"}
-            </Typography>
-            <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
-              {watch("profilePhotoUrl") || "No file chosen"}
+              {watch("profilePhotourl") ? "File Uploaded" : "Choose File"}              
             </Typography>
           </Box>
           {uploading && (
-            <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              sx={{ fontSize: "14px" }}
+            >
               Uploading...
             </Typography>
           )}
@@ -294,7 +303,11 @@ const AddTeacher = () => {
             <Upload size={20} />
           </IconButton>
         </label>
-        <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          sx={{ fontSize: "14px" }}
+        >
           {watch("document")?.name || "Choose File: No file chosen"}
         </Typography>
       </Box>
@@ -391,7 +404,9 @@ const AddTeacher = () => {
                     <Controller
                       name={`workingHours.${day}.startTime`}
                       control={control}
-                      render={({ field: { onChange, value, ...restField } }) => (
+                      render={({
+                        field: { onChange, value, ...restField },
+                      }) => (
                         <TimePicker
                           {...restField}
                           label="Start Time"
@@ -420,7 +435,9 @@ const AddTeacher = () => {
                     <Controller
                       name={`workingHours.${day}.endTime`}
                       control={control}
-                      render={({ field: { onChange, value, ...restField } }) => (
+                      render={({
+                        field: { onChange, value, ...restField },
+                      }) => (
                         <TimePicker
                           {...restField}
                           label="End Time"

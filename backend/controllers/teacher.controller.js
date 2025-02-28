@@ -15,12 +15,13 @@ exports.createTeacherProfile = async (userData, additionalData) => {
             throw new Error('User data is required');
         }
 
-        const { subjects, aboutMe, workingHours, salary } = additionalData || {};
+        const { subjects, aboutMe, workingHours, salary, profilePhotourl } = additionalData || {};
 
         const teacher = new Teacher({
             teacherId: userData._id,
             teacherName: userData.name,
             emailId: userData.email,
+            profilePhotourl, // Now saving the URL here
             startingDate: formatDate(new Date()),
             subjects,
             aboutMe,
@@ -34,6 +35,7 @@ exports.createTeacherProfile = async (userData, additionalData) => {
         throw error;
     }
 };
+
 
 exports.getTeacherProfile = async (req, res) => {
     try {

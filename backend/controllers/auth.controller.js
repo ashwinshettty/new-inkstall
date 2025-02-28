@@ -80,7 +80,8 @@ exports.createUser = async (req, res) => {
             return res.status(403).json({ error: 'Not authorized' });
         }
 
-        const { email, password, name, role, subjects, aboutMe, workingHours, salary } = req.body;
+        const { email, password, name, role, subjects, aboutMe, workingHours, salary, profilePhotourl } = req.body;
+
 
         // Superadmin can create any role, admin can only create teachers and students
         if (req.user.role === 'admin' && !['teacher', 'student'].includes(role)) {
@@ -102,10 +103,12 @@ exports.createUser = async (req, res) => {
         if (role === 'teacher') {
             try {
                 teacherProfile = await createTeacherProfile(user, {
+                    profilePhotourl,  // Include the profile photo URL here
                     subjects: subjects || [],
                     aboutMe: aboutMe || '',
                     workingHours: workingHours || {},
                     salary: salary || { type: 'monthly'||'hourly', amount: 0 }
+                    
                 });
             } catch (error) {
                 // If teacher profile creation fails, delete the user

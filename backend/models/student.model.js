@@ -1,27 +1,25 @@
 const mongoose = require('mongoose');
 
-// Subject schema
-const subjectSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    total: { type: Number, required: true },
-    startDate: { type: Date },
-    endDate: { type: Date }
-}, { _id: true });
+// Address schema
+const addressSchema = new mongoose.Schema({
+    area: { type: String, required: true },
+    landmark: { type: String, required: true },
+    city: { type: String, required: true },
+    state: { type: String, required: true },
+    pincode: { type: String, required: true }
+}, { _id: false });
 
-// Phone number schema
-const phoneNumberSchema = new mongoose.Schema({
+// Contact information schema
+const contactInfoSchema = new mongoose.Schema({
     number: { type: String, required: true },
-    relation: { type: String, required: true, enum: ['father', 'mother', 'guardian', 'self', 'brother', 'sister', 'uncle', 'aunt', 'grandfather', 'grandmother', 'other'] },
-    relationName: { type: String, required: true }
-}, { _id: true });
-
-// Fee breakdown schema simplified
-const feeBreakdownSchema = new mongoose.Schema({
-    subject: {
-        name: { type: String, required: true },
-        total: { type: Number, required: true }
-    }
-}, { _id: true });
+    relation: { type: String, required: true, enum: ['father', 'mother', 'guardian'] },
+    relationName: { type: String, required: true },
+    educationQualification: { type: String, required: true },
+    nameOfOrganisation: { type: String, required: true },
+    designation: { type: String, required: true },
+    Department: { type: String, required: true },
+    parentPhotoUrl: { type: String, default: null } // Nextcloud URL
+}, { _id: false });
 
 // Fee config schema
 const feeConfigSchema = new mongoose.Schema({
@@ -37,6 +35,14 @@ const feeConfigSchema = new mongoose.Schema({
     oneToOneAmount: { type: Number, default: 0 },
     baseAmount: { type: Number, required: true },
     totalAmount: { type: Number, required: true }
+}, { _id: false });
+
+// Subject schema
+const subjectSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    total: { type: Number, required: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true }
 }, { _id: true });
 
 // Main student schema
@@ -46,13 +52,14 @@ const studentSchema = new mongoose.Schema({
     grade: { type: String, required: true },
     branch: { type: String, required: true },
     school: { type: String, required: true },
+    academicYear: { type: String, required: true },
     status: { type: String, required: true, enum: ['admissiondue', 'active', 'inactive', 'completed'], default: 'admissiondue' },
-    subjects: { type: [subjectSchema], required: true, validate: [arr => arr.length > 0, 'At least one subject is required'] },
-    phoneNumbers: { type: [phoneNumberSchema], required: true, validate: [arr => arr.length > 0, 'At least one phone number is required'] },
-    feeBreakdown: [feeBreakdownSchema],
+    address: { type: addressSchema, required: true },
+    contactInformation: { type: [contactInfoSchema], required: true, validate: [arr => arr.length > 0, 'At least one contact is required'] },
     feeConfig: { type: feeConfigSchema, required: true },
     studentPhotoUrl: { type: String, default: null },
-    board: { type: String, required: true, uppercase: true }
+    board: { type: String, required: true, uppercase: true },
+    subjects: { type: [subjectSchema], default: [] }
 }, { 
     timestamps: true,
     versionKey: false,

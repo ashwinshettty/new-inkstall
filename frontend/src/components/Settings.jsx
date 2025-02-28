@@ -63,12 +63,12 @@ const Settings = () => {
       email: "",
       password: "",
       role: "",
-      profilePhoto: null, // For teacher profile photo
-      startingDate: "", // Matches schema "startingDate"
-      aboutMe: "", // Matches schema "aboutMe"
+      profilePhotourl: "",
+      startingDate: "",
+      aboutMe: "",
       subjects: [],
-      document: null, // Optional offer letter file
-      salary: { type: "monthly", amount: "" }, // Combined salary field
+      document: null,
+      salary: { type: "monthly", amount: "" },
       workingHours: defaultWorkingHours,
     },
   });
@@ -78,27 +78,28 @@ const Settings = () => {
   const onSubmit = async (data) => {
     // Set role from the dropdown selection
     data.role = selectedRole;
-  
+
     try {
       const response = await api.post("/auth/users", data, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-  
+
       console.log("User added successfully:", response.data);
-  
+
       if (selectedRole === "teacher") {
         toast.success("Teacher created successfully!");
       } else {
-        const capitalizedRole = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
+        const capitalizedRole =
+          selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
         toast.success(`${capitalizedRole} created successfully!`);
       }
-  
+
       reset(); // Reset the form after success.
     } catch (error) {
       console.error("Error during submission:", error);
-  
+
       if (error.response && error.response.data && error.response.data.error) {
         toast.error("Error: " + error.response.data.error);
       } else if (error.response && error.response.statusText) {

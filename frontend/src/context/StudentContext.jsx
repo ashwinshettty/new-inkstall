@@ -14,9 +14,10 @@ export const StudentsProvider = ({ children }) => {
         const data = response.data;
         if (data.success && Array.isArray(data.students)) {
           const formattedStudents = data.students.map((student) => ({
-            name: `${student.studentName} (${student.grade}) (${student.board})`,
+            name: student.studentName,
             grade: student.grade,
             board: student.board,
+            subjects: student.subjects
           }));
           setStudents(formattedStudents);
         } else {

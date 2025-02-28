@@ -12,59 +12,47 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
             branch, 
             school, 
             board, 
-            subjects,
-            phoneNumbers,
+            contactInformation,
             status,
-            feeConfig
+            feeConfig,
+            address,
+            academicYear,
+            subjects
         } = req.body;
 
         // Validate required fields
-        if (!studentName || !grade || !branch || !school || !board) {
+        if (!studentName || !grade || !branch || !school || !board || !academicYear) {
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields'
             });
         }
 
-        // Validate subjects
-        if (!Array.isArray(subjects) || subjects.length === 0) {
+        // Validate contact information
+        if (!Array.isArray(contactInformation) || contactInformation.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'At least one subject is required'
+                message: 'At least one contact is required'
             });
         }
 
-        // Validate phone numbers
-        if (!Array.isArray(phoneNumbers) || phoneNumbers.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one phone number is required'
-            });
-        }
-
-        // Validate phone number format
-        for (const phone of phoneNumbers) {
-            if (!phone.number || !phone.relation || !phone.relationName) {
+        // Validate relation type
+        for (const contact of contactInformation) {
+            if (!['father', 'mother', 'guardian'].includes(contact.relation)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Each phone number must have number, relation, and relationName'
+                    message: 'Invalid relation type. Must be one of: father, mother, guardian'
                 });
             }
-            if (!['father', 'mother', 'guardian', 'self', 'other'].includes(phone.relation)) {
+            
+            // Validate required fields in contact information
+            if (!contact.number || !contact.relationName || !contact.educationQualification || 
+                !contact.nameOfOrganisation || !contact.designation || !contact.Department) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Invalid relation type. Must be one of: father, mother, guardian, self, other'
+                    message: 'All contact information fields are required'
                 });
             }
-        }
-
-        // Validate status if provided
-        const validStatuses = ['admissiondue', 'active', 'inactive', 'completed'];
-        if (status && !validStatuses.includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid status. Must be one of: admissiondue, active, inactive, completed'
-            });
         }
 
         // Validate fee config
@@ -78,14 +66,6 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
         // Generate student ID
         const studentId = await Student.generateStudentId(board, grade);
 
-        // Create fee breakdown from subjects
-        const feeBreakdown = subjects.map(subject => ({
-            subject: {
-                name: subject.name,
-                total: subject.total
-            }
-        }));
-
         // Create new student
         const student = new Student({
             studentId,
@@ -93,30 +73,13 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
             grade,
             branch,
             school,
-            board,
-            subjects: subjects.map(subject => ({
-                name: subject.name,
-                total: subject.total,
-                startDate: subject.startDate ? new Date(subject.startDate) : new Date(),
-                endDate: subject.endDate ? new Date(subject.endDate) : new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-            })),
-            feeBreakdown,
-            feeConfig: {
-                basePrice: Number(feeConfig.basePrice),
-                gstApplied: Boolean(feeConfig.gstApplied),
-                gstPercentage: Number(feeConfig.gstPercentage || 0),
-                gstAmount: Number(feeConfig.gstAmount || 0),
-                scholarshipApplied: Boolean(feeConfig.scholarshipApplied),
-                scholarshipPercentage: Number(feeConfig.scholarshipPercentage || 0),
-                scholarshipAmount: Number(feeConfig.scholarshipAmount || 0),
-                oneToOneApplied: Boolean(feeConfig.oneToOneApplied),
-                oneToOnePercentage: Number(feeConfig.oneToOnePercentage || 0),
-                oneToOneAmount: Number(feeConfig.oneToOneAmount || 0),
-                baseAmount: Number(feeConfig.baseAmount || feeConfig.subTotal),
-                totalAmount: Number(feeConfig.totalAmount || feeConfig.total)
-            },
-            phoneNumbers,
-            status: status || 'admissiondue'
+            board: board.toUpperCase(),
+            contactInformation,
+            status: status || 'admissiondue',
+            feeConfig,
+            address,
+            academicYear,
+            subjects: subjects || []
         });
 
         // Save student to database
@@ -126,30 +89,11 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Student created successfully',
-            student: {
-                studentId: savedStudent.studentId,
-                studentName: savedStudent.studentName,
-                grade: savedStudent.grade,
-                branch: savedStudent.branch,
-                school: savedStudent.school,
-                board: savedStudent.board,
-                status: savedStudent.status,
-                subjects: savedStudent.subjects,
-                feeBreakdown: savedStudent.feeBreakdown,
-                feeConfig: savedStudent.feeConfig,
-                phoneNumbers: savedStudent.phoneNumbers
-            }
+            student: savedStudent
         });
 
     } catch (error) {
         console.error('Error creating student:', error);
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                success: false,
-                message: 'Validation error',
-                error: Object.values(error.errors).map(err => err.message)
-            });
-        }
         res.status(500).json({
             success: false,
             message: 'Error creating student',
@@ -159,25 +103,14 @@ router.post('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
 });
 
 // Get all students
-router.get('/', auth, authorize('admin', 'superadmin','teacher'), async (req, res) => {
+router.get('/', auth, authorize('admin', 'superadmin'), async (req, res) => {
     try {
         const students = await Student.find().sort({ createdAt: -1 });
         
         res.json({
             success: true,
             message: 'Students retrieved successfully',
-            students: students.map(student => ({
-                studentId: student.studentId,
-                studentName: student.studentName,
-                grade: student.grade,
-                branch: student.branch,
-                school: student.school,
-                board: student.board,
-                status: student.status,
-                subjects: student.subjects,
-                feeBreakdown: student.feeBreakdown,
-                phoneNumbers: student.phoneNumbers
-            }))
+            students
         });
     } catch (error) {
         res.status(500).json({ 
@@ -200,18 +133,7 @@ router.get('/:id', auth, authorize('admin', 'superadmin'), async (req, res) => {
         res.json({
             success: true,
             message: 'Student retrieved successfully',
-            student: {
-                studentId: student.studentId,
-                studentName: student.studentName,
-                grade: student.grade,
-                branch: student.branch,
-                school: student.school,
-                board: student.board,
-                status: student.status,
-                subjects: student.subjects,
-                feeBreakdown: student.feeBreakdown,
-                phoneNumbers: student.phoneNumbers
-            }
+            student
         });
     } catch (error) {
         res.status(500).json({ 
@@ -225,133 +147,89 @@ router.get('/:id', auth, authorize('admin', 'superadmin'), async (req, res) => {
 router.put('/:id', auth, authorize('admin', 'superadmin'), async (req, res) => {
     try {
         const { 
-            studentName,
-            grade,
-            branch,
-            school,
-            board,
-            subjects,
-            feeBreakdown,
-            phoneNumbers,
-            status
+            studentName, 
+            grade, 
+            branch, 
+            school, 
+            board, 
+            status,
+            academicYear,
+            address,
+            contactInformation,
+            feeConfig,
+            studentPhotoUrl,
+            subjects
         } = req.body;
-        
-        let student = await Student.findById(req.params.id);
+
+        // Find student by ID
+        const student = await Student.findById(req.params.id);
         if (!student) {
             return res.status(404).json({
+                success: false,
                 message: 'Student not found'
             });
         }
 
-        // Validate status if provided
-        if (status && !['admissiondue', 'active', 'inactive', 'completed'].includes(status)) {
-            return res.status(400).json({
-                message: 'Invalid status. Must be one of: admissiondue, active, inactive, completed'
-            });
-        }
-
-        // Update basic fields if provided
-        if (studentName) student.studentName = studentName;
-        if (grade) student.grade = grade;
-        if (branch) student.branch = branch;
-        if (school) student.school = school;
-        if (board) student.board = board;
-        if (status) student.status = status;
-
-        // Validate and update phone numbers if provided
-        if (Array.isArray(phoneNumbers)) {
-            if (phoneNumbers.length === 0) {
+        // Validate contact information if provided
+        if (contactInformation) {
+            if (!Array.isArray(contactInformation) || contactInformation.length === 0) {
                 return res.status(400).json({
-                    message: 'At least one phone number is required'
+                    success: false,
+                    message: 'At least one contact is required'
                 });
             }
 
-            // Validate phone number format
-            for (const phone of phoneNumbers) {
-                if (!phone.number || !phone.relation || !phone.relationName) {
+            // Validate relation type
+            for (const contact of contactInformation) {
+                if (!['father', 'mother', 'guardian'].includes(contact.relation)) {
                     return res.status(400).json({
-                        message: 'Each phone number must have number, relation, and relationName'
+                        success: false,
+                        message: 'Invalid relation type. Must be one of: father, mother, guardian'
                     });
                 }
-                if (!['father', 'mother', 'guardian', 'self', 'other'].includes(phone.relation)) {
+                
+                // Validate required fields in contact information
+                if (!contact.number || !contact.relationName || !contact.educationQualification || 
+                    !contact.nameOfOrganisation || !contact.designation || !contact.Department) {
                     return res.status(400).json({
-                        message: 'Invalid relation type. Must be one of: father, mother, guardian, self, other'
+                        success: false,
+                        message: 'All contact information fields are required'
                     });
                 }
             }
-            student.phoneNumbers = phoneNumbers;
         }
 
-        // Update subjects and fee breakdown if provided
-        if (Array.isArray(subjects) && subjects.length > 0) {
-            student.subjects = subjects.map(subject => ({
-                name: subject.name,
-                total: subject.total || 5000,
-                startDate: new Date(subject.startDate) || new Date(),
-                endDate: new Date(subject.endDate) || new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-            }));
+        // Update student fields
+        const updatedStudent = await Student.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    ...(studentName && { studentName }),
+                    ...(grade && { grade }),
+                    ...(branch && { branch }),
+                    ...(school && { school }),
+                    ...(board && { board: board.toUpperCase() }),
+                    ...(status && { status }),
+                    ...(academicYear && { academicYear }),
+                    ...(address && { address }),
+                    ...(contactInformation && { contactInformation }),
+                    ...(feeConfig && { feeConfig }),
+                    ...(studentPhotoUrl && { studentPhotoUrl }),
+                    ...(subjects && { subjects })
+                }
+            },
+            { new: true, runValidators: true }
+        );
 
-            // Process subjects and create fee breakdown
-            const processedFeeBreakdown = subjects.map(subject => ({
-                subject: {
-                    name: subject.name,
-                    total: subject.total || 5000
-                },
-                gstApplied: false,
-                scholarshipApplied: false,
-                scholarshipPercentage: 0,
-                oneToOneApplied: false,
-                oneToOnePercentage: 0
-            }));
-
-            // Apply fee configurations from feeBreakdown if provided
-            if (Array.isArray(feeBreakdown)) {
-                feeBreakdown.forEach(fee => {
-                    if (fee.gstApplied !== undefined) {
-                        processedFeeBreakdown.forEach(pFee => {
-                            pFee.gstApplied = fee.gstApplied;
-                        });
-                    }
-                    if (fee.scholarshipApplied !== undefined) {
-                        processedFeeBreakdown.forEach(pFee => {
-                            pFee.scholarshipApplied = fee.scholarshipApplied;
-                            pFee.scholarshipPercentage = fee.scholarshipPercentage || 0;
-                        });
-                    }
-                    if (fee.oneToOneApplied !== undefined) {
-                        processedFeeBreakdown.forEach(pFee => {
-                            pFee.oneToOneApplied = fee.oneToOneApplied;
-                            pFee.oneToOnePercentage = fee.oneToOnePercentage || 0;
-                        });
-                    }
-                });
-            }
-
-            student.feeBreakdown = processedFeeBreakdown;
-        }
-
-        // Save updated student
-        const updatedStudent = await student.save();
-
-        // Format the response
         res.json({
+            success: true,
             message: 'Student updated successfully',
-            student: {
-                studentId: updatedStudent.studentId,
-                studentName: updatedStudent.studentName,
-                grade: updatedStudent.grade,
-                branch: updatedStudent.branch,
-                school: updatedStudent.school,
-                board: updatedStudent.board,
-                status: updatedStudent.status,
-                subjects: updatedStudent.subjects,
-                feeBreakdown: updatedStudent.feeBreakdown,
-                phoneNumbers: updatedStudent.phoneNumbers
-            }
+            student: updatedStudent
         });
     } catch (error) {
         console.error('Error updating student:', error);
         res.status(500).json({
+            success: false,
             message: 'Error updating student',
             error: error.message
         });
@@ -370,6 +248,7 @@ router.delete('/:id', auth, authorize('admin', 'superadmin'), async (req, res) =
         }
 
         await Student.deleteOne({ _id: req.params.id });
+        
         res.json({
             success: true,
             message: 'Student deleted successfully'
@@ -379,6 +258,143 @@ router.delete('/:id', auth, authorize('admin', 'superadmin'), async (req, res) =
         res.status(500).json({
             success: false,
             message: 'Error deleting student',
+            error: error.message
+        });
+    }
+});
+
+// Add subject to student
+router.post('/:id/subjects', auth, authorize('admin', 'superadmin'), async (req, res) => {
+    try {
+        const { name, total, startDate, endDate } = req.body;
+
+        // Validate required fields
+        if (!name || !total || !startDate || !endDate) {
+            return res.status(400).json({
+                success: false,
+                message: 'All subject fields are required'
+            });
+        }
+
+        // Find student by ID
+        const student = await Student.findById(req.params.id);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        // Add new subject
+        const newSubject = {
+            name,
+            total,
+            startDate,
+            endDate
+        };
+
+        const updatedStudent = await Student.findByIdAndUpdate(
+            req.params.id,
+            { $push: { subjects: newSubject } },
+            { new: true, runValidators: true }
+        );
+
+        res.json({
+            success: true,
+            message: 'Subject added successfully',
+            student: updatedStudent
+        });
+    } catch (error) {
+        console.error('Error adding subject:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error adding subject',
+            error: error.message
+        });
+    }
+});
+
+// Update subject
+router.put('/:id/subjects/:subjectId', auth, authorize('admin', 'superadmin'), async (req, res) => {
+    try {
+        const { name, total, startDate, endDate } = req.body;
+        const { id, subjectId } = req.params;
+
+        // Find student by ID
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        // Find subject index
+        const subjectIndex = student.subjects.findIndex(
+            subject => subject._id.toString() === subjectId
+        );
+
+        if (subjectIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                message: 'Subject not found'
+            });
+        }
+
+        // Update subject fields
+        if (name) student.subjects[subjectIndex].name = name;
+        if (total) student.subjects[subjectIndex].total = total;
+        if (startDate) student.subjects[subjectIndex].startDate = startDate;
+        if (endDate) student.subjects[subjectIndex].endDate = endDate;
+
+        await student.save();
+
+        res.json({
+            success: true,
+            message: 'Subject updated successfully',
+            student
+        });
+    } catch (error) {
+        console.error('Error updating subject:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating subject',
+            error: error.message
+        });
+    }
+});
+
+// Delete subject
+router.delete('/:id/subjects/:subjectId', auth, authorize('admin', 'superadmin'), async (req, res) => {
+    try {
+        const { id, subjectId } = req.params;
+
+        // Find student by ID
+        const student = await Student.findById(id);
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+        }
+
+        // Remove subject
+        const updatedStudent = await Student.findByIdAndUpdate(
+            id,
+            { $pull: { subjects: { _id: subjectId } } },
+            { new: true }
+        );
+
+        res.json({
+            success: true,
+            message: 'Subject removed successfully',
+            student: updatedStudent
+        });
+    } catch (error) {
+        console.error('Error removing subject:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error removing subject',
             error: error.message
         });
     }

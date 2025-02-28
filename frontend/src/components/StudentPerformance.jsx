@@ -14,7 +14,6 @@ import {
 import { Close } from '@mui/icons-material';
 import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
 import { StudentsContext } from '../context/StudentContext';
-import { SubjectsContext } from '../context/SubjectsContext';
 
 const StudentPerformance = () => {
   // State for selected student
@@ -47,13 +46,14 @@ const StudentPerformance = () => {
     }
   ];
 
-  // Use contexts for students and subjects
+  // Use context for students
   const { students, loading: studentsLoading } = useContext(StudentsContext);
-  const { subjects, loading: subjectsLoading } = useContext(SubjectsContext);
 
   // Handle student selection
   const handleStudentChange = (event, newValue) => {
     setSelectedStudent(newValue);
+    // Reset subject when student changes
+    setSubject('');
   };
 
   // Handle form submission
@@ -75,7 +75,7 @@ const StudentPerformance = () => {
     setTotalMarks('100');
   };
 
-  if (studentsLoading || subjectsLoading) return <div>Loading students...</div>;
+  if (studentsLoading) return <div>Loading students...</div>;
 
   return (
     <MainFrame>
@@ -99,186 +99,186 @@ const StudentPerformance = () => {
                 renderInput={(params) => (
                   <TextField {...params} placeholder="Select a student" />
                 )}
-                fullWidth
-                clearOnBlur={false}
-                clearOnEscape
-                openOnFocus
-                blurOnSelect
               />
             </Box>
+
+            {/* Performance Entry and History sections only show when a student is selected */}
+            {selectedStudent && (
+              <>
+                {/* Add Performance Entry Section */}
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
+                    Add Performance Entry
+                  </Typography>
+                  <form onSubmit={handleSubmit}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {/* Subject Field using SubjectsContext */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Typography variant="body2" component="label">
+                          Subject
+                        </Typography>
+                        <Select
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          displayEmpty
+                          disabled={!selectedStudent}
+                        >
+                          <MenuItem value="" disabled>
+                            Select a subject
+                          </MenuItem>
+                          {selectedStudent?.subjects?.map((subj) => (
+                            <MenuItem key={subj.name} value={subj.name}>
+                              {subj.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </Box>
+                      
+                      {/* Description and Test Type Row */}
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography variant="body2" component="label">
+                            Description
+                          </Typography>
+                          <TextField
+                            placeholder="e.g., Quiz 1"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            fullWidth
+                            size="small"
+                          />
+                        </Box>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography variant="body2" component="label">
+                            Test Type
+                          </Typography>
+                          <Select
+                            value={testType}
+                            onChange={(e) => setTestType(e.target.value)}
+                            fullWidth
+                            size="small"
+                          >
+                            {testTypes.map((type) => (
+                              <MenuItem key={type} value={type}>
+                                {type}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </Box>
+                      </Box>
+                      
+                      {/* Marks and Total Marks Row */}
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography variant="body2" component="label">
+                            Marks
+                          </Typography>
+                          <TextField
+                            type="number"
+                            value={marks}
+                            onChange={(e) => setMarks(e.target.value)}
+                            fullWidth
+                            size="small"
+                            inputProps={{ min: 0 }}
+                          />
+                        </Box>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <Typography variant="body2" component="label">
+                            Total Marks
+                          </Typography>
+                          <TextField
+                            type="number"
+                            value={totalMarks}
+                            onChange={(e) => setTotalMarks(e.target.value)}
+                            fullWidth
+                            size="small"
+                            inputProps={{ min: 1 }}
+                          />
+                        </Box>
+                      </Box>
+                      
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        fullWidth
+                        sx={{
+                          bgcolor: '#1976D2',
+                          color: 'white',
+                          py: 1.5,
+                          '&:hover': { bgcolor: '#115293' }
+                        }}
+                      >
+                        Submit Performance
+                      </Button>
+                    </Box>
+                  </form>
+                </Paper>
+                
+                {/* Performance History Section */}
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+                    Performance History
+                  </Typography>
+                  {performanceHistory.length > 0 ? (
+                    <Box>
+                      {performanceHistory.map((entry) => (
+                        <Box 
+                          key={entry.id} 
+                          sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            py: 2,
+                            borderBottom: '1px solid #e0e0e0'
+                          }}
+                        >
+                          <Box>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                              {entry.subject}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {entry.date}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {entry.time} · {entry.testType}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="subtitle1" sx={{ color: '#1976D2', fontWeight: 'bold' }}>
+                              {entry.percentage.toFixed(1)}%
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {entry.marks}/{entry.totalMarks}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 3 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        No performance data available
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+                
+                {/* Attendance History Section */}
+                <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
+                    Attendance History
+                  </Typography>
+                  <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      No attendance data available
+                    </Typography>
+                  </Box>
+                </Paper>
+              </>
+            )}
           </Box>
         </Paper>
-
-        {/* Performance Entry and History sections only show when a student is selected */}
-        {selectedStudent && (
-          <>
-            {/* Add Performance Entry Section */}
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
-                Add Performance Entry
-              </Typography>
-              <form onSubmit={handleSubmit}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {/* Subject Field using SubjectsContext */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Typography variant="body2" component="label">
-                      Subject
-                    </Typography>
-                    <Autocomplete
-                      options={subjects}
-                      getOptionLabel={(option) => option.name || ''}
-                      value={subject ? subjects.find(s => s.name === subject) || null : null}
-                      onChange={(event, newValue) => setSubject(newValue ? newValue.name : '')}
-                      renderInput={(params) => (
-                        <TextField {...params} placeholder="Select a subject..." fullWidth size="small" />
-                      )}
-                      fullWidth
-                    />
-                  </Box>
-                  
-                  {/* Description and Test Type Row */}
-                  <Box sx={{ display: 'flex', gap: 3 }}>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography variant="body2" component="label">
-                        Description
-                      </Typography>
-                      <TextField
-                        placeholder="e.g., Quiz 1"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        fullWidth
-                        size="small"
-                      />
-                    </Box>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography variant="body2" component="label">
-                        Test Type
-                      </Typography>
-                      <Select
-                        value={testType}
-                        onChange={(e) => setTestType(e.target.value)}
-                        fullWidth
-                        size="small"
-                      >
-                        {testTypes.map((type) => (
-                          <MenuItem key={type} value={type}>
-                            {type}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </Box>
-                  </Box>
-                  
-                  {/* Marks and Total Marks Row */}
-                  <Box sx={{ display: 'flex', gap: 3 }}>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography variant="body2" component="label">
-                        Marks
-                      </Typography>
-                      <TextField
-                        type="number"
-                        value={marks}
-                        onChange={(e) => setMarks(e.target.value)}
-                        fullWidth
-                        size="small"
-                        inputProps={{ min: 0 }}
-                      />
-                    </Box>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Typography variant="body2" component="label">
-                        Total Marks
-                      </Typography>
-                      <TextField
-                        type="number"
-                        value={totalMarks}
-                        onChange={(e) => setTotalMarks(e.target.value)}
-                        fullWidth
-                        size="small"
-                        inputProps={{ min: 1 }}
-                      />
-                    </Box>
-                  </Box>
-                  
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    fullWidth
-                    sx={{
-                      bgcolor: '#1976D2',
-                      color: 'white',
-                      py: 1.5,
-                      '&:hover': { bgcolor: '#115293' }
-                    }}
-                  >
-                    Submit Performance
-                  </Button>
-                </Box>
-              </form>
-            </Paper>
-            
-            {/* Performance History Section */}
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                Performance History
-              </Typography>
-              {performanceHistory.length > 0 ? (
-                <Box>
-                  {performanceHistory.map((entry) => (
-                    <Box 
-                      key={entry.id} 
-                      sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        py: 2,
-                        borderBottom: '1px solid #e0e0e0'
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                          {entry.subject}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {entry.date}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {entry.time} · {entry.testType}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        <Typography variant="subtitle1" sx={{ color: '#1976D2', fontWeight: 'bold' }}>
-                          {entry.percentage.toFixed(1)}%
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {entry.marks}/{entry.totalMarks}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 3 }}>
-                  <Typography variant="body1" color="text.secondary">
-                    No performance data available
-                  </Typography>
-                </Box>
-              )}
-            </Paper>
-            
-            {/* Attendance History Section */}
-            <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                Attendance History
-              </Typography>
-              <Box sx={{ textAlign: 'center', py: 3 }}>
-                <Typography variant="body1" color="text.secondary">
-                  No attendance data available
-                </Typography>
-              </Box>
-            </Paper>
-          </>
-        )}
       </Box>
     </MainFrame>
   );

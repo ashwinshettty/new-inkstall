@@ -20,6 +20,9 @@ import StudentsDatabase from "./components/StudentsDatabase";
 import StudentPerformance from "./components/StudentPerformance";
 import { StudentsProvider } from "./context/StudentContext";
 import { SubjectsProvider } from "./context/SubjectsContext";
+// import { GradesProvider } from "./context/GradesContext";
+import { InfoProvider } from "./context/InfoContext";
+
 
 const App = () => {
   return (
@@ -38,31 +41,32 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        
-        {/* Protected Routes wrapped with context providers */}
+
+        {/* Protected Routes wrapped with multiple context providers */}
         <Route element={<ProtectedRoute />}>
           <Route
             element={
               <StudentsProvider>
                 <SubjectsProvider>
-                  <Layout />
+                  {/* <GradesProvider> */}
+                  <InfoProvider>
+                    <Layout />
+                  </InfoProvider>
+                  {/* </GradesProvider> */}
                 </SubjectsProvider>
               </StudentsProvider>
             }
           >
             <Route index element={<TodaysAttendance />} />
-            {/* <Route path="/dashboard" element={<MyAttendance />} /> */}
             <Route path="/my-attendance" element={<MyAttendance />} />
-            {/* <Route path="/today-attendance" element={<TodaysAttendance />} /> */}
             <Route path="/settings" element={<Settings />} />
             <Route path="/teachers" element={<Teachers />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/daily-updates" element={<DailyUpdates />} />
             <Route path="/test-submission" element={<TestSubmission />} />
-            <Route path="/student-performance" element={<StudentPerformance/>} />
- 
+            <Route path="/student-performance" element={<StudentPerformance />} />
             <Route path="/students" element={<StudentForm />} />
-            <Route path ="/students-database" element ={<StudentsDatabase/>} />
+            <Route path="/students-database" element={<StudentsDatabase />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Route>
