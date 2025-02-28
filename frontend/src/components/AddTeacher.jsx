@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useContext } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import {
   Box,
@@ -10,11 +10,18 @@ import {
   RadioGroup,
   TextField,
   Typography,
+  Button,
+  Select,
+  MenuItem,
+  Divider,
 } from "@mui/material";
 import { LocalizationProvider, TimePicker, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { Upload } from "lucide-react";
+import axios from "axios";
+import api from "../api";
+import { SubjectsContext } from "../context/SubjectsContext";
 
 const AddTeacher = () => {
   const { register, control, setValue, watch } = useFormContext();
@@ -23,44 +30,8 @@ const AddTeacher = () => {
   const defaultStartTime = "09:00";
   const defaultEndTime = "17:00";
 
-  const subjects = [
-    "Psychology",
-    "Global Perspectives",
-    "Physical Education",
-    "Geography",
-    "Combined Science",
-    "Phonics",
-    "Environmental Management",
-    "Economics",
-    "French",
-    "Mathematics - Core and Extended",
-    "Computer Science",
-    "Commerce",
-    "History",
-    "Sanskrit",
-    "Spanish",
-    "UOI",
-    "Art and Design",
-    "International Mathematics",
-    "German",
-    "Marathi",
-    "Music",
-    "English - First Language",
-    "Drama",
-    "English as a Second Language",
-    "Sociology",
-    "Physics",
-    "Accounting",
-    "Mandarin Chinese",
-    "Design and Technology",
-    "Chemistry",
-    "Hindi",
-    "ICT",
-    "Co-ordinated Sciences",
-    "Biology",
-    "Business Studies",
-    "Additional Mathematics",
-  ];
+  // Fetch subjects from SubjectsContext instead of hardcoding them
+  const { subjects: subjectsData, loading: subjectsLoading } = useContext(SubjectsContext);
 
   // Days keys matching your schema
   const days = [
@@ -73,8 +44,63 @@ const AddTeacher = () => {
     "sunday",
   ];
 
+  // State for handling profile photo upload status
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  // Handle profile photo change and upload using /upload/photo API
+  const handleProfilePhotoChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    // Validate file type and size
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("File size must be less than 5MB");
+      return;
+    }
+    setUploadError("");
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const response = await api.post("/upload/photo", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        // Save the returned URL in form state so it can be saved in MongoDB later
+        setValue("profilePhotoUrl", response.data.url);
+      } else {
+        setUploadError(response.data.message || "Upload failed");
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Error uploading file";
+      setUploadError(`Upload failed: ${errorMessage}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // File change handler for other documents (e.g. Offer Letter)
   const handleFileChange = (field) => (event) => {
     setValue(field, event.target.files[0]);
+  };
+
+  // Date formatting utility
+  const formatDate = (date) => {
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    return date.toLocaleDateString("en-GB", options).replace(/\s/g, " ");
   };
 
   return (
@@ -100,8 +126,7 @@ const AddTeacher = () => {
             id="profilePhoto"
             hidden
             accept="image/*"
-            {...register("profilePhoto")}
-            onChange={handleFileChange("profilePhoto")}
+            onChange={handleProfilePhotoChange}
           />
           <label htmlFor="profilePhoto" style={{ cursor: "pointer" }}>
             <Box
@@ -121,20 +146,23 @@ const AddTeacher = () => {
             Photo
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography
-              component="span"
-              sx={{ fontSize: "14px", fontWeight: 500 }}
-            >
-              Choose File
+            <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
+              {watch("profilePhotoUrl") ? "File Uploaded" : "Choose File"}
             </Typography>
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              sx={{ fontSize: "14px" }}
-            >
-              {watch("profilePhoto")?.name || "No file chosen"}
+            <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
+              {watch("profilePhotoUrl") || "No file chosen"}
             </Typography>
           </Box>
+          {uploading && (
+            <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
+              Uploading...
+            </Typography>
+          )}
+          {uploadError && (
+            <Typography variant="body2" color="error" sx={{ fontSize: "14px" }}>
+              {uploadError}
+            </Typography>
+          )}
         </Box>
       </Box>
 
@@ -142,7 +170,7 @@ const AddTeacher = () => {
         <Grid item xs={12} md={6}>
           <Controller
             name="startingDate"
-            control={control}  // Changed from methods.control to control
+            control={control}
             rules={{ required: "Starting Date is required" }}
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -175,7 +203,7 @@ const AddTeacher = () => {
           About Me
         </Typography>
         <Controller
-          name="aboutMe" // Matches schema field "aboutMe"
+          name="aboutMe"
           control={control}
           rules={{ required: "About Me is required" }}
           render={({ field, fieldState: { error } }) => (
@@ -194,7 +222,7 @@ const AddTeacher = () => {
         />
       </Box>
 
-      {/* Subjects */}
+      {/* Subjects Section using SubjectsContext */}
       <Box sx={{ mt: 4 }}>
         <Typography variant="subtitle1" sx={{ mb: 2, fontSize: "16px" }}>
           Subjects
@@ -210,34 +238,35 @@ const AddTeacher = () => {
             gap: 2,
           }}
         >
-          {subjects.map((subject) => (
-            <Controller
-              key={subject}
-              name="subjects"
-              control={control}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={field.value.includes(subject)}
-                      onChange={(e) => {
-                        const newSubjects = e.target.checked
-                          ? [...field.value, subject]
-                          : field.value.filter((s) => s !== subject);
-                        field.onChange(newSubjects);
-                      }}
-                      sx={{ "& .MuiSvgIcon-root": { fontSize: "1rem" } }}
-                    />
-                  }
-                  label={subject}
-                  sx={{
-                    margin: 0,
-                    "& .MuiFormControlLabel-label": { fontSize: "14px" },
-                  }}
-                />
-              )}
-            />
-          ))}
+          {subjectsData &&
+            subjectsData.map((subjectObj) => (
+              <Controller
+                key={subjectObj.name}
+                name="subjects"
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={field.value.includes(subjectObj.name)}
+                        onChange={(e) => {
+                          const newSubjects = e.target.checked
+                            ? [...field.value, subjectObj.name]
+                            : field.value.filter((s) => s !== subjectObj.name);
+                          field.onChange(newSubjects);
+                        }}
+                        sx={{ "& .MuiSvgIcon-root": { fontSize: "1rem" } }}
+                      />
+                    }
+                    label={subjectObj.name}
+                    sx={{
+                      margin: 0,
+                      "& .MuiFormControlLabel-label": { fontSize: "14px" },
+                    }}
+                  />
+                )}
+              />
+            ))}
         </Box>
       </Box>
 
@@ -265,11 +294,7 @@ const AddTeacher = () => {
             <Upload size={20} />
           </IconButton>
         </label>
-        <Typography
-          variant="body2"
-          color="textSecondary"
-          sx={{ fontSize: "14px" }}
-        >
+        <Typography variant="body2" color="textSecondary" sx={{ fontSize: "14px" }}>
           {watch("document")?.name || "Choose File: No file chosen"}
         </Typography>
       </Box>
@@ -362,7 +387,7 @@ const AddTeacher = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    {/* Start Time using key startTime */}
+                    {/* Start Time */}
                     <Controller
                       name={`workingHours.${day}.startTime`}
                       control={control}
@@ -391,7 +416,7 @@ const AddTeacher = () => {
                         />
                       )}
                     />
-                    {/* End Time using key endTime */}
+                    {/* End Time */}
                     <Controller
                       name={`workingHours.${day}.endTime`}
                       control={control}

@@ -199,6 +199,8 @@ const TodaysAttendance = () => {
                 visibility={visibility}
                 onClick={() => handlePunchAction("In")}
                 loading={loading}
+                w="200px"
+                h="200px"
               />
               <Card sx={{ width: "30%", p: 1, textAlign: "center" }}>
                 <Typography sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}>
@@ -223,6 +225,8 @@ const TodaysAttendance = () => {
                 visibility={visibility}
                 onClick={() => handlePunchAction("Out")}
                 loading={loading}
+                w="200px"
+                h="200px"
               />
               <Card sx={{ width: "30%", p: 1, textAlign: "center" }}>
                 <Typography sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}>

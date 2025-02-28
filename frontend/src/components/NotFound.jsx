@@ -13,7 +13,7 @@ const NotFound = () => {
         <Box sx={{display:"flex" , flexDirection:"column" , justifyContent:"center", alignItems:"center", width:"100%" }}>
             <img src={notfound} alt="404" />
             <Typography variant="h4" component="h4" sx={{ mb: 4, color: '#1a237e', fontWeight: 600 }}>Oops! Page Not Found</Typography>
-            <InkstallButton link={"/today-attendance"} texts={["Go to Homepage"]} h={"3.5em"} w={"10em"} btnColor={"#fecc00"} />
+            <InkstallButton link={"/"} texts={["Go to Homepage"]} h={"3.5em"} w={"10em"} btnColor={"#fecc00"} />
             {/* <button onClick={goToHomepage}>Go to Homepage</button> */}
         </Box>
     </MainFrame>

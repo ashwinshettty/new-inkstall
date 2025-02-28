@@ -1,14 +1,17 @@
 import React, { useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import attendanceSound from "../../sounds/attendance.mp3";
+import { Link, useNavigate } from "react-router-dom";
 
-const InkstallButton = ({ texts, btnColor, visibility, onClick }) => {
+const InkstallButton = ({ texts, btnColor, visibility, onClick, w, h, link }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const audioRef = useRef(null);
   const buttonRadius = "1rem";
+
+  const navigate = useNavigate();
 
   // Calculate darker shade for bottom border
   const getDarkerShade = (color) => {
@@ -59,12 +62,17 @@ const InkstallButton = ({ texts, btnColor, visibility, onClick }) => {
         setIsHovered(false);
         setIsPressed(false);
       }}
+      onClick={() => {
+        if (link) {
+          navigate(link);
+        }
+      }}
     >
       <button
         style={{
           position: "relative",
-          width: "200px",
-          height: "200px",
+          width: w,
+          height: h,
           borderRadius: buttonRadius,
           fontSize: "24px",
           fontWeight: "bold",
