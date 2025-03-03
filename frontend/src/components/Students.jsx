@@ -35,7 +35,7 @@ import { InfoContext } from "../context/InfoContext";
 
 const Students = () => {
   const { subjects } = useContext(SubjectsContext);
-  const { grades } = useContext(InfoContext);
+  const { grades,branches,boards } = useContext(InfoContext);
 
   // Student basic info states
   const [studentName, setStudentName] = useState("");
@@ -599,7 +599,7 @@ const Students = () => {
                 <FormControl fullWidth required>
                   <InputLabel>Grade</InputLabel>
                   <Select value={studentGrade} label="Grade" onChange={(e) => setStudentGrade(e.target.value)}>
-                    {["Playschool", "Nurserry", "Jr. KG", "Sr. KG", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"].map((grade) => (
+                    {grades.map((grade) => (
                       <MenuItem key={grade} value={grade}>{grade}</MenuItem>
                     ))}
                   </Select>
@@ -609,8 +609,8 @@ const Students = () => {
                 <FormControl fullWidth required>
                   <InputLabel>Branch</InputLabel>
                   <Select value={studentBranch} label="Branch" onChange={(e) => setStudentBranch(e.target.value)}>
-                    {["Goregoan West", "Goregoan East", "Online", "Borivali", "Kandivali", "Others"].map((branch) => (
-                      <MenuItem key={branch} value={branch}>{branch}</MenuItem>
+                    {branches.map((branch) => (
+                      <MenuItem key={branch._id} value={branch.name}>{branch.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -622,8 +622,8 @@ const Students = () => {
                 <FormControl fullWidth required>
                   <InputLabel>Board</InputLabel>
                   <Select value={studentBoard} label="Board" onChange={(e) => setStudentBoard(e.target.value)}>
-                    {["IGCSE", "CBSE", "SSC", "NIOS", "IB", "AS/A IBDP", "Others"].map((board) => (
-                      <MenuItem key={board} value={board}>{board}</MenuItem>
+                    {boards.map((board) => (
+                      <MenuItem key={board._id} value={board.name}>{board.name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>

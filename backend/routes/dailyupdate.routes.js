@@ -1,12 +1,17 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
-const { createDailyUpdate, getDailyUpdates } = require('../controllers/dailyupdate.controller');
-const { auth } = require('../middleware/auth.middleware'); // Import authentication middleware
+const dailyUpdateController = require('../controllers/dailyupdate.controller');
+const { auth } = require('../middleware/auth.middleware');
 
-// POST: Create a new daily update (Requires Authentication)
-router.post('/', auth, createDailyUpdate);
+// Configure multer to use memory storage so that files can be directly uploaded to Nextcloud.
+const upload = multer({ storage: multer.memoryStorage() });
 
-// GET: Fetch all daily updates for the logged-in user
-router.get('/', auth, getDailyUpdates);
+// Route for creating a new daily update record.
+router.post('/', auth, dailyUpdateController.createDailyUpdate);
+// Route for fetching daily updates.
+router.get('/', auth, dailyUpdateController.getDailyUpdates);
+// Route for uploading a K-Sheet (or Test-Sheet) file.
+router.post('/upload-ksheet', auth, upload.single("file"), dailyUpdateController.uploadKSheet);
 
 module.exports = router;

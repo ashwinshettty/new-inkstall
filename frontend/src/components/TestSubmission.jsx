@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   Grid,
-  Divider,
 } from "@mui/material";
 import React, { useState, useContext, useEffect } from "react";
 import { BsUpload } from "react-icons/bs";
@@ -58,6 +57,8 @@ const TestSubmission = () => {
   const [chapters, setChapters] = useState([{ chapterName: "" }]);
   const [notes, setNotes] = useState("");
   const [uploadTestFileUrl, setUploadTestFileUrl] = useState("");
+  // New state for storing the selected file for test sheet upload
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Selected students state (initially empty)
   const [selectedStudents, setSelectedStudents] = useState([
@@ -78,12 +79,16 @@ const TestSubmission = () => {
   const { students, loading: studentsLoading } = useContext(StudentsContext);
   const { subjects, loading: subjectsLoading } = useContext(SubjectsContext);
 
-  // Fetch test submissions
+  // ------------------------------------------------------------------------
+  // 1) Fetch test submissions and reverse them so newest appears on top
+  // ------------------------------------------------------------------------
   const fetchTestSubmissions = async () => {
     try {
       setLoadingSubmissions(true);
       const response = await api.get("/test-submissions");
-      setTestSubmissions(response.data);
+      // Reverse the data so the most recent submission is first
+      const reversed = response.data.slice().reverse();
+      setTestSubmissions(reversed);
       setSubmissionsError(null);
     } catch (err) {
       console.error("Error fetching test submissions:", err);
@@ -114,10 +119,7 @@ const TestSubmission = () => {
   const handleStudentChange = (index, newValue) => {
     const updatedStudents = [...selectedStudents];
     if (newValue) {
-      updatedStudents[index] = {
-        name: newValue.name,
-        grade: newValue.grade,
-      };
+      updatedStudents[index] = { name: newValue.name, grade: newValue.grade };
     } else {
       updatedStudents[index] = { name: "", grade: "" };
     }
@@ -147,16 +149,14 @@ const TestSubmission = () => {
     setChapters(updatedChapters);
   };
 
-  // Simulate file upload (replace with your upload logic)
+  // Handle file selection; store the file in state
   const handleFileUpload = (file) => {
     if (file) {
-      // Here you might want to upload the file and get a URL
-      const fakeUrl = `https://example.com/${file.name}`;
-      setUploadTestFileUrl(fakeUrl);
+      setSelectedFile(file);
     }
   };
 
-  // Handle form submission
+  // Handle form submission: first create test submission record, then if a file was selected, upload it
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -168,6 +168,7 @@ const TestSubmission = () => {
         name: subject,
         chapters: chapters,
         notes: notes || "",
+        // We will update uploadTestFileUrl once the file is uploaded
         uploadTestFileUrl: uploadTestFileUrl || "",
       },
     };
@@ -175,7 +176,30 @@ const TestSubmission = () => {
     console.log("Sending data to backend:", JSON.stringify(formData, null, 2));
 
     try {
+      // Create test submission record
       const response = await api.post("/test-submissions", formData);
+      const testSubmissionId = response.data._id;
+
+      // If a file was selected, upload it using the same API endpoint but with fileType "test-sheet"
+      if (selectedFile && testSubmissionId) {
+        const fileFormData = new FormData();
+        fileFormData.append("file", selectedFile);
+        fileFormData.append("testSubmissionId", testSubmissionId); // Identifier for updating the record later
+        fileFormData.append("subjectName", subject);
+        // For simplicity, we take the first chapter's name
+        fileFormData.append("chapterName", chapters[0].chapterName);
+        fileFormData.append("fileType", "test-sheet");
+
+        const uploadResponse = await api.post(
+          "/daily-updates/upload-ksheet",
+          fileFormData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
+        // Set the file URL in state so it appears in the UI
+        setUploadTestFileUrl(uploadResponse.data.fileUrl);
+      }
 
       setAlertMessage("Test submission created successfully!");
       setAlertSeverity("success");
@@ -189,6 +213,7 @@ const TestSubmission = () => {
       setNotes("");
       setUploadTestFileUrl("");
       setSelectedStudents([{ name: "", grade: "" }]);
+      setSelectedFile(null);
 
       // Fetch updated test submissions
       fetchTestSubmissions();
@@ -201,6 +226,30 @@ const TestSubmission = () => {
       setAlertSeverity("error");
       setOpenAlert(true);
       console.error("Submission error:", error);
+    }
+  };
+
+  // ------------------------------------------------------------------------
+  // 2) Function to handle viewing the file with credentials
+  // ------------------------------------------------------------------------
+  const handleViewFile = async (fileUrl) => {
+    try {
+      // We assume `fileUrl` is either an absolute URL or a relative path
+      const response = await api.get(fileUrl, {
+        responseType: "blob",
+        withCredentials: true, // ensures cookies are sent
+      });
+      const fileBlob = new Blob([response.data], {
+        type: response.headers["content-type"],
+      });
+      const fileURL = URL.createObjectURL(fileBlob);
+      // Open the file in a new tab
+      window.open(fileURL, "_blank");
+    } catch (error) {
+      console.error("Error retrieving file:", error);
+      setAlertMessage("Unable to view file. Check console for details.");
+      setAlertSeverity("error");
+      setOpenAlert(true);
     }
   };
 
@@ -240,9 +289,7 @@ const TestSubmission = () => {
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Submission Date */}
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
-            >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}>
               <Typography variant="body1" component="label">
                 Submission Date
               </Typography>
@@ -364,11 +411,7 @@ const TestSubmission = () => {
                   setSubject(newValue ? newValue.name : "")
                 }
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Select Subject"
-                    required
-                  />
+                  <TextField {...params} placeholder="Select Subject" required />
                 )}
                 fullWidth
               />
@@ -461,6 +504,11 @@ const TestSubmission = () => {
                   onChange={(e) => handleFileUpload(e.target.files[0])}
                 />
               </Button>
+              {selectedFile && (
+                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  File selected: {selectedFile.name}
+                </Typography>
+              )}
               {uploadTestFileUrl && (
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                   File uploaded: {uploadTestFileUrl.split("/").pop()}
@@ -544,7 +592,10 @@ const TestSubmission = () => {
             {testSubmissions.map((submission, index) => (
               <Card
                 key={index}
-                sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
               >
                 <CardContent sx={{ p: 3, position: "relative" }}>
                   <Grid container spacing={2}>
@@ -552,10 +603,7 @@ const TestSubmission = () => {
                       <Typography variant="subtitle2" color="text.secondary">
                         Student Name(s)
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: 500, mb: 2 }}
-                      >
+                      <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
                         {submission.students
                           ?.map((student) => student.name)
                           .join(", ") || "N/A"}
@@ -564,10 +612,7 @@ const TestSubmission = () => {
                       <Typography variant="subtitle2" color="text.secondary">
                         Chapter Name
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: 500, mb: 2 }}
-                      >
+                      <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
                         {submission.subject?.chapters
                           ?.map((chapter) => chapter.chapterName)
                           .join(", ") || "N/A"}
@@ -577,16 +622,18 @@ const TestSubmission = () => {
                         Test File Location
                       </Typography>
                       {submission.subject?.uploadTestFileUrl ? (
+                        // Instead of a direct anchor link, use a click handler that sends credentials
                         <Typography
-                          component="a"
-                          href={submission.subject.uploadTestFileUrl}
                           variant="body1"
                           sx={{
                             color: "#1976d2",
-                            textDecoration: "none",
+                            textDecoration: "underline",
                             fontWeight: 500,
-                            "&:hover": { textDecoration: "underline" },
+                            cursor: "pointer",
                           }}
+                          onClick={() =>
+                            handleViewFile(submission.subject.uploadTestFileUrl)
+                          }
                         >
                           Click here to view
                         </Typography>
@@ -601,34 +648,24 @@ const TestSubmission = () => {
                       <Typography variant="subtitle2" color="text.secondary">
                         Subject
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: 500, mb: 2 }}
-                      >
+                      <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
                         {submission.subject?.name || "N/A"}
                       </Typography>
 
                       <Typography variant="subtitle2" color="text.secondary">
                         Total Marks
                       </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{ fontWeight: 500, mb: 2 }}
-                      >
+                      <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
                         {submission.totalMarks || "N/A"}
                       </Typography>
                     </Grid>
                   </Grid>
 
-                  {/* Submission date positioned at bottom right */}
+                  {/* Proposed date displayed at bottom right */}
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{
-                      position: "absolute",
-                      bottom: 12,
-                      right: 16,
-                    }}
+                    sx={{ position: "absolute", bottom: 12, right: 16 }}
                   >
                     Submitted on:{" "}
                     {formatSubmissionDate(submission.proposedDate)}
@@ -640,16 +677,8 @@ const TestSubmission = () => {
         )}
       </Box>
 
-      <Snackbar
-        open={openAlert}
-        autoHideDuration={6000}
-        onClose={handleAlertClose}
-      >
-        <Alert
-          onClose={handleAlertClose}
-          severity={alertSeverity}
-          sx={{ width: "100%" }}
-        >
+      <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleAlertClose}>
+        <Alert onClose={handleAlertClose} severity={alertSeverity} sx={{ width: "100%" }}>
           {alertMessage}
         </Alert>
       </Snackbar>

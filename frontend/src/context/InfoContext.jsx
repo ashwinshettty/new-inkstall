@@ -26,7 +26,7 @@ export const InfoProvider = ({ children }) => {
         setInfo({
           subjects: subjectsResponse.data,
           boards: boardsResponse.data,
-          grades: gradesResponse.data,
+          grades: gradesResponse.data[0].grades,
         });
       } catch (error) {
         console.error("Error fetching info:", error);

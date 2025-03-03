@@ -5,11 +5,12 @@ const { auth } = require("../middleware/auth.middleware");
 const Attendance = require("../models/attendance.model");
 const Teacher = require("../models/teacher.model");
 const cron = require('node-cron');
+const attendanceController = require("../controllers/attendance.controller");
 
 // Schedule the job for every day at 10:30 PM IST
 cron.schedule('30 22 * * *', async () => {
     try {
-        await performAutoPunchOut();
+        await attendanceController.performAutoPunchOut();
     } catch (error) {
         console.error('Auto punch-out error:', error);
     }
@@ -35,57 +36,57 @@ async function getAddressFromCoordinates(latitude, longitude) {
 }
 
 // Function to perform automatic punch-out at 10:30 PM IST
-async function performAutoPunchOut() {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayFormatted = today.toLocaleString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
+// async function performAutoPunchOut() {
+//   try {
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const todayFormatted = today.toLocaleString("en-US", {
+//       month: "numeric",
+//       day: "numeric",
+//       year: "numeric",
+//       hour: "numeric",
+//       minute: "2-digit",
+//       second: "2-digit",
+//       hour12: true,
+//     });
 
-    // Find all attendance records for today without punch-out
-    const unpunchedRecords = await Attendance.find({
-      date: todayFormatted,
-      "punchIn.time": { $exists: true },
-      "punchOut.time": { $exists: false },
-    });
+//     // Find all attendance records for today without punch-out
+//     const unpunchedRecords = await Attendance.find({
+//       date: todayFormatted,
+//       "punchIn.time": { $exists: true },
+//       "punchOut.time": { $exists: false },
+//     });
 
-    console.log(`Found ${unpunchedRecords.length} records without punch-out`);
+//     console.log(`Found ${unpunchedRecords.length} records without punch-out`);
 
-    for (const record of unpunchedRecords) {
-      const punchOutTime = new Date();
-      // Set punchOutTime to 10:30 PM IST
-      punchOutTime.setHours(22, 30, 0, 0);
+//     for (const record of unpunchedRecords) {
+//       const punchOutTime = new Date();
+//       // Set punchOutTime to 10:30 PM IST
+//       punchOutTime.setHours(22, 30, 0, 0);
 
-      record.punchOut = {
-        time: punchOutTime.toLocaleString("en-US", {
-          month: "numeric",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        }),
-        location: record.punchIn.location, // Reuse punch-in location for auto punch-out
-      };
-      // Update status to indicate auto punch-out
-      record.status = "auto-punched-out";
-      await record.save();
-      console.log(`Auto punch-out completed for teacher: ${record.teacherId}`);
-    }
-    return unpunchedRecords;
-  } catch (error) {
-    console.error("Auto punch-out error:", error);
-    throw error;
-  }
-}
+//       record.punchOut = {
+//         time: punchOutTime.toLocaleString("en-US", {
+//           month: "numeric",
+//           day: "numeric",
+//           year: "numeric",
+//           hour: "numeric",
+//           minute: "2-digit",
+//           second: "2-digit",
+//           hour12: true,
+//         }),
+//         location: record.punchIn.location, // Reuse punch-in location for auto punch-out
+//       };
+//       // Update status to indicate auto punch-out
+//       record.status = "auto-punched-out";
+//       await record.save();
+//       console.log(`Auto punch-out completed for teacher: ${record.teacherId}`);
+//     }
+//     return unpunchedRecords;
+//   } catch (error) {
+//     console.error("Auto punch-out error:", error);
+//     throw error;
+//   }
+// }
 
 // Automatic punch-out check every minute
 setInterval(async () => {
