@@ -26,38 +26,38 @@ const AttendanceList = () => {
   };
 
 
-  const attendanceData = [
-    {
-      date: "22 Feb 2025",
-      dayOfWeek: "Saturday",
-      status: "absent",
-    },
-    {
-      date: "21 Feb 2025",
-      dayOfWeek: "Friday",
-      status: "present",
-      checkIn: {
-        time: "12:58 PM",
-        location: "Rustomjee Ozone Tower, 7, Mahesh Nagar, Goregaon West, Mumbai, Maharashtra 400104, India",
-      },
-      checkOut: {
-        time: "10:00 PM",
-        location: "Rustomjee Ozone Tower, 7, Mahesh Nagar, Goregaon West, Mumbai, Maharashtra 400104, India",
-      },
-      workingHours: "9h 1m",
-    },
-    {
-      date: "28 Feb 2025",
-      dayOfWeek: "Saturday",
-      status: "leave",
-    },
-    {
-      "date": "2025-02-23",
-      "dayOfWeek": "Sunday",
-      "status": "weekend",
-    }
+  // const attendanceData = [
+  //   {
+  //     date: "22 Feb 2025",
+  //     dayOfWeek: "Saturday",
+  //     status: "absent",
+  //   },
+  //   {
+  //     date: "21 Feb 2025",
+  //     dayOfWeek: "Friday",
+  //     status: "present",
+  //     checkIn: {
+  //       time: "12:58 PM",
+  //       location: "Rustomjee Ozone Tower, 7, Mahesh Nagar, Goregaon West, Mumbai, Maharashtra 400104, India",
+  //     },
+  //     checkOut: {
+  //       time: "10:00 PM",
+  //       location: "Rustomjee Ozone Tower, 7, Mahesh Nagar, Goregaon West, Mumbai, Maharashtra 400104, India",
+  //     },
+  //     workingHours: "9h 1m",
+  //   },
+  //   {
+  //     date: "28 Feb 2025",
+  //     dayOfWeek: "Saturday",
+  //     status: "leave",
+  //   },
+  //   {
+  //     "date": "2025-02-23",
+  //     "dayOfWeek": "Sunday",
+  //     "status": "weekend",
+  //   }
 
-  ];
+  // ];
   return (
     <MainFrame>
       <Card className="w-full mx-auto p-6 ">
@@ -70,12 +70,12 @@ const AttendanceList = () => {
           </Button>
         </Box>
         <div className="space-y-4">
-          {attendanceData.map((attendance, index) => (
+          {/* {attendanceData.map((attendance, index) => (
             <AttendanceCard
               key={attendance.date}
               {...attendance}
             />
-          ))}
+          ))} */}
         </div>
       </Card>
       <Modal

@@ -34,8 +34,8 @@ const Teachers = () => {
         };
     
         fetchTeachers();
-    }, []); // Empty dependency array ensures it runs only once on mount// Empty dependency array ensures it runs only once on mount
-
+    }, []); 
+    
     return (
         <MainFrame>
             <Typography variant="h4" component="h4" sx={{ mb: 4 }}>Teachers</Typography>

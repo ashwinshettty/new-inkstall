@@ -18,7 +18,7 @@ const contactInfoSchema = new mongoose.Schema({
     nameOfOrganisation: { type: String, required: true },
     designation: { type: String, required: true },
     Department: { type: String, required: true },
-    parentPhotoUrl: { type: String, default: null } // Nextcloud URL
+    parentPhotoUrl: { type: String, default: null }
 }, { _id: false });
 
 // Fee config schema

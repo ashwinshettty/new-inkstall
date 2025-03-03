@@ -40,8 +40,7 @@ const MyAttendance = () => {
         // 2. Format the sorted data
         const formattedData = sortedData.map((attendance) => ({
           ...attendance,
-          date: new Date(attendance.date).toLocaleDateString(),
-          dayOfWeek: new Date(attendance.date).toLocaleDateString("en-US", {
+          date: new Date(attendance.date).toLocaleDateString('en-GB'),          dayOfWeek: new Date(attendance.date).toLocaleDateString("en-US", {
             weekday: "long",
           }),
           checkIn: attendance.punchIn

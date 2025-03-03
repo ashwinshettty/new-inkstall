@@ -26,12 +26,26 @@ const Layout = () => {
   const userName = localStorage.getItem('userName') || 'User';
   const userRole = localStorage.getItem('userRole')?.toLowerCase() || 'guest';
 
-  console.log('Layout - Current user:', { userName, userRole }); // Debug log
+  // Generate dashboard title based on user role
+  const getDashboardTitle = () => {
+    switch(userRole) {
+      case 'superadmin':
+        return 'SuperAdmin Dashboard';
+      case 'admin':
+        return 'Admin Dashboard';
+      case 'teacher':
+        return 'Teacher Dashboard';
+      default:
+        return 'Dashboard';
+    }
+  };
+
+  // console.log('Layout - Current user:', { userName, userRole }); // Debug log
 
   // Check authentication
   const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
   if (!isAuthenticated) {
-    console.log('Not authenticated, redirecting to login');
+    // console.log('Not authenticated, redirecting to login');
     navigate('/login');
     return null;
   }
@@ -42,63 +56,57 @@ const Layout = () => {
   const menuItems = [
     {
       text: "Today's Attendance",
-      icon: <IoHomeOutline color="black" />,
+      icon: <IoHomeOutline size={20} />,
       path: "/", 
       allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
       text: "My Attendance",
-      icon: <MdOutlineTaskAlt />,
+      icon: <MdOutlineTaskAlt size={20} />,
       path: "/my-attendance",
       allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
       text: "Daily Updates",
-      icon: <FaRegBell />,
+      icon: <FaRegBell size={20} />,
       path: "/daily-updates",
       allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
       text: "Test Submission",
-      icon: <LuClipboard />,
+      icon: <LuClipboard size={20} />,
       path: "/test-submission",
       allowedRoles: ['admin', 'superadmin', 'teacher']
     },
     {
-      text: "Student Performance",
-      icon: <HiOutlineChartBar />,
-      path: "/student-performance",
-      allowedRoles: ['admin', 'superadmin', 'teacher']
-    },
-    {
-      text: "Admin",
-      icon: <GrUserSettings />,
-      path: "/admin",
-      allowedRoles: ['admin', 'superadmin']
-    },
-    {
-      text: "Settings",
-      icon: <IoSettingsOutline />,
-      path: "/settings",
-      allowedRoles: ['admin', 'superadmin']
-    },
-    {
-      text: "Teachers",
-      icon: <LiaUserSolid />,
-      path: "/teachers",
-      allowedRoles: ['admin', 'superadmin']
-    },
-    {
       text: "Students",
-      icon: <LiaUserSolid />,
+      icon: <LiaUserSolid size={20} />,
       path: "/students",
       allowedRoles: ['admin', 'superadmin']
     },
     {
       text: "Students Database",
-      icon : <FaDatabase/>,
+      icon: <FaDatabase size={20} />,
       path: "/students-database",
-      allowedRoles: ['admin', 'superadmin','teacher']
+      allowedRoles: ['admin', 'superadmin']
+    },
+    {
+      text: "Student Performance",
+      icon: <HiOutlineChartBar size={20} />,
+      path: "/student-performance",
+      allowedRoles: ['admin', 'superadmin', 'teacher']
+    },
+    {
+      text: "Admin",
+      icon: <GrUserSettings size={20} />,
+      path: "/admin",
+      allowedRoles: ['admin', 'superadmin']
+    },
+    {
+      text: "Settings",
+      icon: <IoSettingsOutline size={20} />,
+      path: "/settings",
+      allowedRoles: ['admin', 'superadmin']
     }
   ];
 
@@ -119,19 +127,19 @@ const Layout = () => {
   };
 
   return (
-    <Box sx={{ display: "flex" ,scrollBehavior:"smooth" }}>
+    <Box sx={{ display: "flex", scrollBehavior: "smooth" }}>
       <AppBar position="fixed" sx={{ backgroundColor: "#fff", boxShadow: "none" }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleDrawer}>
             <MenuIcon sx={{ color: "black" }} />
           </IconButton>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 , bgcolor:"#fecc00" , px:"8px" , py:"4px", borderRadius:"12px" , boxShadow:1 }}>
-            <img src={pfp} alt="Profile" style={{ height: "40px", width:"40px", borderRadius: "50%" }} />
-           <Box sx={{display:"flex"  , flexDirection:"column" , gap:"-1rem"}}>
-           <Typography sx={{ fontSize: "14px", fontWeight: 600 , color:"#000" }}>{userName}</Typography>
-           <span style={{ fontSize: "12px", fontWeight: 100 , color:"gray" }}>{userRole}</span>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, bgcolor: "#fff", px: "8px", py: "4px", borderRadius: "12px", boxShadow: 1 }}>
+            <img src={pfp} alt="Profile" style={{ height: "40px", width: "40px", borderRadius: "50%" }} />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "-1rem" }}>
+              <Typography sx={{ fontSize: "14px", fontWeight: 600, color: "#000" }}>{userName}</Typography>
+              <span style={{ fontSize: "12px", fontWeight: 100, color: "gray" }}>{userRole}</span>
             </Box>
-            <TbLogout cursor="pointer" color="#fff" fontSize="22px"  onClick={handleLogout} />
+            <TbLogout cursor="pointer" color="#000" fontSize="22px" onClick={handleLogout} />
           </Box>
         </Toolbar>
       </AppBar>
@@ -149,63 +157,138 @@ const Layout = () => {
               backgroundColor: "#fff",
               color: "#000",
               border: "none",
-              overflowX:"hidden"
+              overflowX: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              height: "100%"
             },
           }}
         >
-          <Box sx={{ p: 3, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <img src="https://static.wixstatic.com/shapes/abaee8_dc6d6d64fba440848d2b9769e4f2e998.svg" alt="Inkstall Logo" className="w-32 h-auto mb-6" />
-            <p className="mt-2 text-sm text-gray-600">Admin Dashboard</p>
-            <IconButton onClick={toggleDrawer}>
-              <MenuIcon sx={{ color: "black" }} />
+          {/* Top section with hamburger menu */}
+          <Box sx={{ 
+            p: 2, 
+            display: "flex", 
+            justifyContent: "flex-end"
+          }}>
+            <IconButton onClick={toggleDrawer} sx={{ color: "black" }}>
+              <MenuIcon />
             </IconButton>
           </Box>
-          <Divider sx={{ backgroundColor: "rgba(255,255,255,0.12)" }} />
-        <Box sx={{display:"flex" , flexDirection:"column" , justifyContent:"space-between" , height:"100%" }} >
-        <List>
-            {menuItems
-              .filter(item => {
-                const hasAccess = item.allowedRoles.includes(userRole);
-                console.log(`Menu item "${item.text}" - Role: ${userRole} - Has access: ${hasAccess}`);
-                return hasAccess;
-              })
-              .map((item) => (
-              <motion.div whileHover={{ scale: 1.05 }} key={item.text}>
+          
+          {/* Logo and dashboard title */}
+          <Box sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            alignItems: "center",
+            mb: 2
+          }}>
+            <img 
+              src="https://static.wixstatic.com/shapes/abaee8_dc6d6d64fba440848d2b9769e4f2e998.svg" 
+              alt="Inkstall Logo" 
+              style={{ height: "60px", width: "auto", marginBottom: "8px" }} 
+            />
+            <Typography sx={{ 
+              fontSize: "16px", 
+              color: "#000",
+              fontWeight: 500 
+            }}>
+              {getDashboardTitle()}
+            </Typography>
+          </Box>
+          
+          <Divider />
+          
+          {/* Menu items in scrollable container */}
+          <Box sx={{ 
+            flex: 1,
+            overflowY: "auto",
+            py: 1
+          }}>
+            <List sx={{ px: 1 }}>
+              {menuItems
+                .filter(item => {
+                  const hasAccess = item.allowedRoles.includes(userRole);
+                  return hasAccess;
+                })
+                .map((item) => (
                 <ListItem
                   button
+                  key={item.text}
                   onClick={() => navigate(item.path)}
                   sx={{
-                    mb: 1,
-                    mx: 1,
-                    scrollBehavior:"smooth",
-                    borderRadius: 1,
-                    cursor:"pointer",
-                    backgroundColor: location.pathname === item.path ? "rgb(250 204 21)" : "transparent",
-                    color: location.pathname === item.path ? "#fff" : "#000",
-                    "&:hover": { backgroundColor: "rgb(250 204 21)" },
-                    cursor:"pointer"
+                    mb: 0.5,
+                    py: 1.5,
+                    borderRadius: 0,
+                    borderLeft: location.pathname === item.path ? '4px solid #fecc00' : '4px solid transparent',
+                    backgroundColor: location.pathname === item.path ? 'rgba(254, 204, 0, 0.1)' : 'transparent',
+                    color: '#555',
+                    "&:hover": { 
+                      backgroundColor: 'rgba(254, 204, 0, 0.1)',
+                      cursor: 'pointer',
+                    },
+                    transition: "all 0.2s ease",
                   }}
                 >
-                  <ListItemIcon sx={{ color: location.pathname === item.path ? "#fff" : "#000", minWidth: 40 }}>
+                  <ListItemIcon sx={{ 
+                    color: location.pathname === item.path ? '#000' : '#000', 
+                    minWidth: 40,
+                  }}>
                     {item.icon}
                   </ListItemIcon>
-                  <Typography sx={{ fontSize: "14px" }}>{item.text}</Typography>
+                  <Typography sx={{ 
+                    fontSize: "15px",
+                    fontWeight: location.pathname === item.path ? 500 : 400,
+                    color: location.pathname === item.path ? '#000' : '#000',
+                  }}>
+                    {item.text}
+                  </Typography>
                 </ListItem>
-              </motion.div>
-            ))}
-          </List>
-        </Box>
-          <Box sx={{ pl: "2rem", pb: "1rem" }}>
-            <motion.div whileHover={{ scale: 1.1 }}>
-              <Button onClick={handleLogout} sx={{ fontSize: "16px", fontWeight: "600", color: "#fff", bgcolor: "rgb(250 204 21)", p: "8px", display: "flex", flexDirection: "row", gap: "1rem" }}>
-                <TbLogout fontSize="18px" /> Logout
-              </Button>
-            </motion.div>
+              ))}
+            </List>
+          </Box>
+          
+          {/* Logout button fixed at bottom */}
+          <Box sx={{ 
+            borderTop: "1px solid #eee",
+            bgcolor: "#fff",
+            mt: "auto",
+            p: 0
+          }}>
+            <ListItem
+              button
+              onClick={handleLogout}
+              sx={{
+                py: 1.5,
+                
+                color: '#555',
+                "&:hover": { 
+                  backgroundColor: '#FECC00',
+                  cursor: 'pointer',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: '#000', minWidth: 40 }}>
+                <TbLogout size={20} />
+              </ListItemIcon>
+              <Typography sx={{ fontSize: "15px" }}>
+                Logout
+              </Typography>
+            </ListItem>
           </Box>
         </Drawer>
       </motion.div>
       
-      <Box component="main" sx={{ flexGrow: 1, width: `calc(100% - ${open ? drawerWidth : 0}px)`, transition: "width 0.3s ease-in-out", minHeight: "100vh", backgroundColor: "#f5f5f5", pt: 8 }}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          width: `calc(100% - ${open ? drawerWidth : 0}px)`, 
+          transition: "width 0.3s ease-in-out", 
+          minHeight: "100vh", 
+          backgroundColor: "#f5f5f5", 
+          pt: 8 
+        }}
+      >
         <Outlet />
       </Box>
     </Box>

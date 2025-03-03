@@ -1,18 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 import MainFrame from './ui/MainFrame';
-import { 
-  Box, 
-  Typography, 
-  Autocomplete, 
-  TextField, 
-  IconButton, 
-  Paper,  
-  Button, 
-  Select, 
-  MenuItem 
-} from '@mui/material';
-import { Close } from '@mui/icons-material';
-import { IoMdCheckmarkCircleOutline } from 'react-icons/io';
+import { Box, Typography, Autocomplete, TextField, Paper, Button, Select, MenuItem } from '@mui/material';
+import api from '../api';
 import { StudentsContext } from '../context/StudentContext';
 
 const StudentPerformance = () => {
@@ -26,47 +16,69 @@ const StudentPerformance = () => {
   const [marks, setMarks] = useState('0');
   const [totalMarks, setTotalMarks] = useState('100');
 
-  // Sample test types (could be fetched as well)
+  // State to hold fetched performance history
+  const [performanceHistory, setPerformanceHistory] = useState([]);
+
+  // Sample test types
   const testTypes = [
     'Inkstall Test',
     'School Test'
   ];
 
-  // Sample performance history
-  const performanceHistory = [
-    {
-      id: 1,
-      subject: 'German',
-      date: 'Feb 27, 2025',
-      time: '12:34:22:34Z',
-      testType: 'inkstall test',
-      marks: 12,
-      totalMarks: 122,
-      percentage: 9.8
-    }
-  ];
-
   // Use context for students
   const { students, loading: studentsLoading } = useContext(StudentsContext);
 
-  // Handle student selection
+  // Handle student selection and fetch performance history
   const handleStudentChange = (event, newValue) => {
     setSelectedStudent(newValue);
-    // Reset subject when student changes
     setSubject('');
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  // Fetch performance history when selectedStudent changes
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchPerformanceHistory(selectedStudent.studentId);
+    } else {
+      setPerformanceHistory([]);
+    }
+  }, [selectedStudent]);
+
+  const fetchPerformanceHistory = async (studentId) => {
+    try {
+      const res = await api.get(`/student-performance/${studentId}`);
+      if (res.data.success) {
+        setPerformanceHistory(res.data.data);
+      } else {
+        setPerformanceHistory([]);
+      }
+    } catch (error) {
+      console.error("Error fetching performance history", error);
+      setPerformanceHistory([]);
+    }
+  };
+
+  // Handle form submission to create a new performance record
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({
-      student: selectedStudent,
+    const payload = {
+      studentId: selectedStudent.studentId,
       subject,
       description,
       testType,
       marks,
-      totalMarks
-    });
+      totalMarks,
+      submitDateTime: new Date().toISOString()
+    };
+    try {
+      const res = await api.post('/student-performance', payload);
+      if (res.data.success) {
+        // Optionally display a success notification here
+        // Refresh performance history after submission
+        fetchPerformanceHistory(selectedStudent.studentId);
+      }
+    } catch (error) {
+      console.error("Error saving performance", error);
+    }
     // Reset form fields after submission
     setSubject('');
     setDescription('');
@@ -93,7 +105,8 @@ const StudentPerformance = () => {
               </Typography>
               <Autocomplete
                 options={students}
-                getOptionLabel={(option) => option.name || ''}
+                // Use studentName if available; fallback to name
+                getOptionLabel={(option) => option.studentName || option.name || ''}
                 value={selectedStudent}
                 onChange={handleStudentChange}
                 renderInput={(params) => (
@@ -102,7 +115,6 @@ const StudentPerformance = () => {
               />
             </Box>
 
-            {/* Performance Entry and History sections only show when a student is selected */}
             {selectedStudent && (
               <>
                 {/* Add Performance Entry Section */}
@@ -112,7 +124,6 @@ const StudentPerformance = () => {
                   </Typography>
                   <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {/* Subject Field using SubjectsContext */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Typography variant="body2" component="label">
                           Subject
@@ -134,7 +145,6 @@ const StudentPerformance = () => {
                         </Select>
                       </Box>
                       
-                      {/* Description and Test Type Row */}
                       <Box sx={{ display: 'flex', gap: 3 }}>
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Typography variant="body2" component="label">
@@ -167,7 +177,6 @@ const StudentPerformance = () => {
                         </Box>
                       </Box>
                       
-                      {/* Marks and Total Marks Row */}
                       <Box sx={{ display: 'flex', gap: 3 }}>
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
                           <Typography variant="body2" component="label">
@@ -197,7 +206,6 @@ const StudentPerformance = () => {
                         </Box>
                       </Box>
                       
-                      {/* Submit Button */}
                       <Button
                         type="submit"
                         variant="contained"
@@ -224,7 +232,7 @@ const StudentPerformance = () => {
                     <Box>
                       {performanceHistory.map((entry) => (
                         <Box 
-                          key={entry.id} 
+                          key={entry._id} 
                           sx={{ 
                             display: 'flex', 
                             justifyContent: 'space-between',
@@ -238,15 +246,16 @@ const StudentPerformance = () => {
                               {entry.subject}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {entry.date}
+                              {new Date(entry.submitDateTime).toLocaleDateString()}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {entry.time} · {entry.testType}
+                              {new Date(entry.submitDateTime).toLocaleTimeString()} · {entry.testType}
                             </Typography>
                           </Box>
                           <Box sx={{ textAlign: 'right' }}>
+                            {/* Calculate percentage if needed */}
                             <Typography variant="subtitle1" sx={{ color: '#1976D2', fontWeight: 'bold' }}>
-                              {entry.percentage.toFixed(1)}%
+                              {((entry.marks / entry.totalMarks) * 100).toFixed(1)}%
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               {entry.marks}/{entry.totalMarks}
@@ -262,18 +271,6 @@ const StudentPerformance = () => {
                       </Typography>
                     </Box>
                   )}
-                </Paper>
-                
-                {/* Attendance History Section */}
-                <Paper elevation={1} sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500 }}>
-                    Attendance History
-                  </Typography>
-                  <Box sx={{ textAlign: 'center', py: 3 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      No attendance data available
-                    </Typography>
-                  </Box>
                 </Paper>
               </>
             )}

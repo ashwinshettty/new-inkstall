@@ -21,30 +21,35 @@ const TodaysAttendance = () => {
   });
 
   // Fetch attendance data for today
+  // Add this check in your fetchAttendanceHistory function
   const fetchAttendanceHistory = async () => {
     try {
+      // Set defaults
       setLastPunchIn("--");
       setLastPunchOut("--");
+      setCheckedIn(false);
 
       const today = dayjs();
-      const formattedDate = today.format("M/D/YYYY"); 
+      const formattedDate = today.format("M/D/YYYY");
 
-      const response = await api.get(`/attendance/history?date=${formattedDate}`);
+      const response = await api.get(
+        `/attendance/history?date=${formattedDate}`
+      );
 
       if (response.data && response.data[0]) {
         const attendance = response.data[0];
         const datePart = attendance.date.split(",")[0].trim();
         const recordDate = dayjs(datePart, "M/D/YYYY");
 
-        if (recordDate.isSame(today, "day")) {
-          if (attendance.punchIn) {
-            const timePart = attendance.formattedPunchIn.split(", ")[1];
-            setLastPunchIn(timePart);
+        // Check if the record is actually from today
+        if (recordDate.format("M/D/YYYY") === today.format("M/D/YYYY")) {
+          if (attendance.punchIn?.time) {
+            setLastPunchIn(dayjs(attendance.punchIn.time).format("hh:mm A"));
             setCheckedIn(true);
           }
-          if (attendance.punchOut) {
-            const timePart = attendance.formattedPunchOut.split(", ")[1];
-            setLastPunchOut(timePart);
+
+          if (attendance.punchOut?.time) {
+            setLastPunchOut(dayjs(attendance.punchOut.time).format("hh:mm A"));
             setCheckedIn(false);
           }
         }
@@ -58,7 +63,6 @@ const TodaysAttendance = () => {
       });
     }
   };
-
   useEffect(() => {
     fetchAttendanceHistory();
   }, []);
@@ -153,7 +157,6 @@ const TodaysAttendance = () => {
     <MainFrame>
       {/* Container for both sections */}
       <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 3 }}>
-        
         {/* Today's Attendance Card */}
         <Box
           sx={{
@@ -203,7 +206,9 @@ const TodaysAttendance = () => {
                 h="200px"
               />
               <Card sx={{ width: "30%", p: 1, textAlign: "center" }}>
-                <Typography sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}>
+                <Typography
+                  sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}
+                >
                   Last In: {lastPunchIn}
                 </Typography>
               </Card>
@@ -229,7 +234,9 @@ const TodaysAttendance = () => {
                 h="200px"
               />
               <Card sx={{ width: "30%", p: 1, textAlign: "center" }}>
-                <Typography sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}>
+                <Typography
+                  sx={{ fontSize: "14px", color: "black", fontWeight: 500 }}
+                >
                   Last Out: {lastPunchOut}
                 </Typography>
               </Card>
@@ -239,64 +246,63 @@ const TodaysAttendance = () => {
 
         {/* Top Performers Card */}
         <Box
-  sx={{
-    bgcolor: "#fff",
-    borderRadius: 2,
-    p: 4,
-    boxShadow: 1,
-  }}
->
-  <Typography
-    sx={{
-      color: "#000066",
-      fontWeight: 800,
-      fontSize: "22px",
-      textAlign: "center",
-    }}
-  >
-    Top Performers
-  </Typography>
+          sx={{
+            bgcolor: "#fff",
+            borderRadius: 2,
+            p: 4,
+            boxShadow: 1,
+          }}
+        >
+          <Typography
+            sx={{
+              color: "#000066",
+              fontWeight: 800,
+              fontSize: "22px",
+              textAlign: "center",
+            }}
+          >
+            Top Performers
+          </Typography>
 
-  {/* Flex container to center the table */}
-  <Box
-    sx={{
-      mt: 2,
-      display: "flex",
-      justifyContent: "center", // horizontally center
-    }}
-  >
-    {/* Make table narrower, center text */}
-    <table
-      style={{
-        width: "300px",            // fixed width to make it small
-        borderCollapse: "collapse",
-        textAlign: "center",       // center all table text
-      }}
-    >
-      <thead style={{ backgroundColor: "#f5f5f5" }}>
-        <tr>
-          <th style={{ padding: "8px" }}>Name</th>
-          <th style={{ padding: "8px" }}>Points</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style={{ padding: "8px" }}>Alice</td>
-          <td style={{ padding: "8px" }}>120</td>
-        </tr>
-        <tr>
-          <td style={{ padding: "8px" }}>Bob</td>
-          <td style={{ padding: "8px" }}>95</td>
-        </tr>
-        <tr>
-          <td style={{ padding: "8px" }}>Charlie</td>
-          <td style={{ padding: "8px" }}>85</td>
-        </tr>
-      </tbody>
-    </table>
-  </Box>
-</Box>
-
+          {/* Flex container to center the table */}
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "center", // horizontally center
+            }}
+          >
+            {/* Make table narrower, center text */}
+            <table
+              style={{
+                width: "300px", // fixed width to make it small
+                borderCollapse: "collapse",
+                textAlign: "center", // center all table text
+              }}
+            >
+              <thead style={{ backgroundColor: "#f5f5f5" }}>
+                <tr>
+                  <th style={{ padding: "8px" }}>Name</th>
+                  <th style={{ padding: "8px" }}>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "8px" }}>Alice</td>
+                  <td style={{ padding: "8px" }}>120</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "8px" }}>Bob</td>
+                  <td style={{ padding: "8px" }}>95</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: "8px" }}>Charlie</td>
+                  <td style={{ padding: "8px" }}>85</td>
+                </tr>
+              </tbody>
+            </table>
+          </Box>
+        </Box>
       </Box>
 
       {/* Snackbar for alerts */}

@@ -16,12 +16,12 @@ import {
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { Close } from "@mui/icons-material";
 import { FiCheck, FiX, FiFileText } from "react-icons/fi";
-import api from "../api"; // Axios instance
+import api from "../api"; 
 import { StudentsContext } from "../context/StudentContext";
 import { SubjectsContext } from "../context/SubjectsContext";
 
 const DailyUpdates = () => {
-  // Form state
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedStudents, setSelectedStudents] = useState([
     { student: "", selectedGrade: "", selectedBoard: "" },
@@ -98,7 +98,7 @@ const DailyUpdates = () => {
         formDataFile.append("file", selectedFile);
         formDataFile.append("students", JSON.stringify(selectedStudents));
         formDataFile.append("subject", subject);
-        const uploadResponse = await api.post("http://localhost:4000/api/nextcloud/upload-ksheet", formDataFile);
+        const uploadResponse = await api.post("/daily-updates", formDataFile);
         if (uploadResponse.data.shareUrl) {
           kSheetUrl = uploadResponse.data.shareUrl;
         }
@@ -261,12 +261,12 @@ const DailyUpdates = () => {
               </Typography>
               <TextareaAutosize
                 id="notes"
-                fullWidth
-                minRows={4}
+                fullwidth
+                minRows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 required
-                style={{ border: "1px solid #d3d3d3", borderRadius: "8px" }}
+                style={{ border: "1px solid #d3d3d3",padding:'8px', borderRadius: "8px" }}
               />
             </Box>
 

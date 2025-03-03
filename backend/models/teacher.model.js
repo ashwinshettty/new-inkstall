@@ -23,6 +23,7 @@ const teacherSchema = new mongoose.Schema(
       unique: true,
     },
     profilePhotourl: { type: String },
+    localUrl: { type: String },
     startingDate: {
       type: String,
       required: true,

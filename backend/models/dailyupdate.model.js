@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
 
 const DailyUpdateSchema = new mongoose.Schema({
-    date: { 
+    date: {
         type: Date, 
         default: Date.now,
         required: true 
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Reference to the User model
+        required: true
     },
     students: [
         {

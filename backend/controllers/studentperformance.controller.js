@@ -1,4 +1,5 @@
 const StudentPerformance = require('../models/studentperformance.model');
+const Student = require('../models/student.model'); // Import the Student model
 
 // Helper function to remove __v field from response
 const removeVersionKey = (doc) => {
@@ -8,17 +9,25 @@ const removeVersionKey = (doc) => {
     return docWithoutVersion;
 };
 
-// Create a new student performance entry
+
 exports.createStudentPerformance = async (req, res) => {
     try {
-        const { studentName, subject, description, testType, marks, totalMarks, submitDateTime } = req.body;
+        const { studentId, subject, description, testType, marks, totalMarks, submitDateTime } = req.body;
 
-        if (!studentName || !subject || !testType || !marks || !totalMarks || !submitDateTime) {
+        // Check if all required fields are provided
+        if (!studentId || !subject || !testType || !marks || !totalMarks || !submitDateTime) {
             return res.status(400).json({ success: false, message: 'All required fields must be provided' });
         }
 
+        // Validate that the studentId exists in the students database
+        const student = await Student.findOne({ studentId: studentId });
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found' });
+        }
+
+        // Save the performance record
         const performance = new StudentPerformance({
-            studentName,
+            studentId,
             subject,
             description,
             testType,
@@ -59,22 +68,20 @@ exports.getAllStudentPerformances = async (req, res) => {
 // Get a single student performance record by ID
 exports.getStudentPerformanceById = async (req, res) => {
     try {
-        const performance = await StudentPerformance.findById(req.params.id);
-
-        if (!performance) {
-            return res.status(404).json({ success: false, message: 'Record not found' });
-        }
-
+        const performances = await StudentPerformance.find({ studentId: req.params.id }).sort({ submitDateTime: -1 });
         res.json({
             success: true,
-            message: 'Student performance record retrieved successfully',
-            data: removeVersionKey(performance)
+            message: 'Student performance records retrieved successfully',
+            data: performances.map(performance => {
+              const { __v, ...rest } = performance.toObject();
+              return rest;
+            })
         });
-
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error retrieving record', error: error.message });
     }
 };
+
 
 // Update student performance record
 exports.updateStudentPerformance = async (req, res) => {

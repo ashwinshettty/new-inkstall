@@ -1,18 +1,49 @@
-import { Close } from '@mui/icons-material';
-import { Autocomplete, Box, Button, IconButton, TextField, Typography, Snackbar, Alert } from '@mui/material';
-import React, { useState, useContext } from 'react';
+import { Close } from "@mui/icons-material";
+import {
+  Autocomplete,
+  Box,
+  Button,
+  IconButton,
+  TextField,
+  Typography,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Card,
+  CardContent,
+  Grid,
+  Divider,
+} from "@mui/material";
+import React, { useState, useContext, useEffect } from "react";
 import { BsUpload } from "react-icons/bs";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import MainFrame from './ui/MainFrame';
-import axios from 'axios';
-import { StudentsContext } from '../context/StudentContext';
-import { SubjectsContext } from '../context/SubjectsContext';
+import { IoMdCheckmarkCircleOutline, IoMdDocument } from "react-icons/io";
+import MainFrame from "./ui/MainFrame";
+import axios from "axios";
+import { StudentsContext } from "../context/StudentContext";
+import { SubjectsContext } from "../context/SubjectsContext";
+import api from "../api";
 
 const TestSubmission = () => {
   // Date formatting utility
   const formatDate = (date) => {
-    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options).replace(/\s/g, ' ');
+    if (!date) return "";
+    // Use en-GB locale with 2-digit day/month to get DD/MM/YYYY
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  // Format date without time
+  const formatSubmissionDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   // Today's date for submission date
@@ -21,28 +52,57 @@ const TestSubmission = () => {
 
   // Form state for test submission
   const [submissionDate] = useState(todayFormatted);
-  const [proposedTestDate, setProposedTestDate] = useState('');
-  const [totalMarks, setTotalMarks] = useState('');
-  const [subject, setSubject] = useState('');
-  const [chapters, setChapters] = useState([{ chapterName: '' }]);
-  const [notes, setNotes] = useState('');
-  const [uploadTestFileUrl, setUploadTestFileUrl] = useState('');
+  const [proposedTestDate, setProposedTestDate] = useState("");
+  const [totalMarks, setTotalMarks] = useState("");
+  const [subject, setSubject] = useState("");
+  const [chapters, setChapters] = useState([{ chapterName: "" }]);
+  const [notes, setNotes] = useState("");
+  const [uploadTestFileUrl, setUploadTestFileUrl] = useState("");
 
   // Selected students state (initially empty)
-  const [selectedStudents, setSelectedStudents] = useState([{ name: '', grade: '' }]);
+  const [selectedStudents, setSelectedStudents] = useState([
+    { name: "", grade: "" },
+  ]);
 
   // Alert states
   const [openAlert, setOpenAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertSeverity, setAlertSeverity] = useState('success');
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSeverity, setAlertSeverity] = useState("success");
+
+  // Test submissions state
+  const [testSubmissions, setTestSubmissions] = useState([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [submissionsError, setSubmissionsError] = useState(null);
 
   // Use contexts for students and subjects
   const { students, loading: studentsLoading } = useContext(StudentsContext);
   const { subjects, loading: subjectsLoading } = useContext(SubjectsContext);
 
+  // Fetch test submissions
+  const fetchTestSubmissions = async () => {
+    try {
+      setLoadingSubmissions(true);
+      const response = await api.get("/test-submissions");
+      setTestSubmissions(response.data);
+      setSubmissionsError(null);
+    } catch (err) {
+      console.error("Error fetching test submissions:", err);
+      setSubmissionsError(
+        "Failed to load test submissions. Please try again later."
+      );
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
+  // Initial fetch of test submissions
+  useEffect(() => {
+    fetchTestSubmissions();
+  }, []);
+
   // Handlers for students
   const handleAddStudent = () => {
-    setSelectedStudents([...selectedStudents, { name: '', grade: '' }]);
+    setSelectedStudents([...selectedStudents, { name: "", grade: "" }]);
   };
 
   const handleRemoveStudent = (index) => {
@@ -56,10 +116,10 @@ const TestSubmission = () => {
     if (newValue) {
       updatedStudents[index] = {
         name: newValue.name,
-        grade: newValue.grade
+        grade: newValue.grade,
       };
     } else {
-      updatedStudents[index] = { name: '', grade: '' };
+      updatedStudents[index] = { name: "", grade: "" };
     }
     setSelectedStudents(updatedStudents);
   };
@@ -72,7 +132,7 @@ const TestSubmission = () => {
 
   // Handlers for chapters
   const handleAddChapter = () => {
-    setChapters([...chapters, { chapterName: '' }]);
+    setChapters([...chapters, { chapterName: "" }]);
   };
 
   const handleRemoveChapter = (index) => {
@@ -108,34 +168,39 @@ const TestSubmission = () => {
         name: subject,
         chapters: chapters,
         notes: notes || "",
-        uploadTestFileUrl: uploadTestFileUrl || ""
-      }
+        uploadTestFileUrl: uploadTestFileUrl || "",
+      },
     };
 
     console.log("Sending data to backend:", JSON.stringify(formData, null, 2));
 
     try {
-      const response = await axios.post('http://localhost:4000/api/test-submissions', formData);
+      const response = await api.post("/test-submissions", formData);
 
-      setAlertMessage('Test submission created successfully!');
-      setAlertSeverity('success');
+      setAlertMessage("Test submission created successfully!");
+      setAlertSeverity("success");
       setOpenAlert(true);
 
       // Reset form
-      setProposedTestDate('');
-      setTotalMarks('');
-      setSubject('');
-      setChapters([{ chapterName: '' }]);
-      setNotes('');
-      setUploadTestFileUrl('');
-      setSelectedStudents([{ name: '', grade: '' }]);
+      setProposedTestDate("");
+      setTotalMarks("");
+      setSubject("");
+      setChapters([{ chapterName: "" }]);
+      setNotes("");
+      setUploadTestFileUrl("");
+      setSelectedStudents([{ name: "", grade: "" }]);
 
-      console.log('Submission successful:', response.data);
+      // Fetch updated test submissions
+      fetchTestSubmissions();
+
+      console.log("Submission successful:", response.data);
     } catch (error) {
-      setAlertMessage(`Error: ${error.response?.data?.message || 'Failed to submit test'}`);
-      setAlertSeverity('error');
+      setAlertMessage(
+        `Error: ${error.response?.data?.message || "Failed to submit test"}`
+      );
+      setAlertSeverity("error");
       setOpenAlert(true);
-      console.error('Submission error:', error);
+      console.error("Submission error:", error);
     }
   };
 
@@ -144,25 +209,40 @@ const TestSubmission = () => {
     setOpenAlert(false);
   };
 
-  // Date formatting for proposed test date options (if needed)
-  // Here you can add additional date handling if required
-
   // If either context is loading, show a loading indicator
   if (studentsLoading || subjectsLoading) return <div>Loading...</div>;
 
   return (
     <MainFrame>
-      <Box sx={{ p: 3, width: '70%', position: 'relative', left: '50%', transform: 'translateX(-50%)', border: '1px solid #ccc', borderRadius: '8px' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IoMdCheckmarkCircleOutline size={32} color='#0000eb' />
-          <Typography variant="h6" component="h6" sx={{ color: '#1a237e', fontWeight: 600 }}>
+      {/* Test Submission Form */}
+      <Box
+        sx={{
+          p: 3,
+          width: "70%",
+          position: "relative",
+          left: "50%",
+          transform: "translateX(-50%)",
+          border: "1px solid #ccc",
+          borderRadius: "8px",
+          mb: 4,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IoMdCheckmarkCircleOutline size={32} color="#0000eb" />
+          <Typography
+            variant="h6"
+            component="h6"
+            sx={{ color: "#1a237e", fontWeight: 600 }}
+          >
             Test Submission Form
           </Typography>
         </Box>
         <form onSubmit={handleSubmit}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Submission Date */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
+            >
               <Typography variant="body1" component="label">
                 Submission Date
               </Typography>
@@ -170,40 +250,83 @@ const TestSubmission = () => {
             </Box>
 
             {/* Proposed Test Date */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1" component="label" required>
-                Proposed Test Date <span style={{ color: 'red' }}>*</span>
+                Proposed Test Date <span style={{ color: "red" }}>*</span>
               </Typography>
-              <TextField fullWidth type="date" value={proposedTestDate} onChange={(e) => setProposedTestDate(e.target.value)} required />
+              <TextField
+                fullWidth
+                type="date"
+                value={proposedTestDate}
+                onChange={(e) => setProposedTestDate(e.target.value)}
+                required
+              />
             </Box>
 
             {/* Total Marks */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1" component="label" required>
-                Total Marks (20-140) <span style={{ color: 'red' }}>*</span>
+                Total Marks (20-140) <span style={{ color: "red" }}>*</span>
               </Typography>
-              <TextField fullWidth value={totalMarks} onChange={(e) => setTotalMarks(e.target.value)} type="number" inputProps={{ min: 1 }} required />
+              <TextField
+                fullWidth
+                value={totalMarks}
+                onChange={(e) => setTotalMarks(e.target.value)}
+                type="number"
+                inputProps={{ min: 1 }}
+                required
+              />
             </Box>
 
             {/* Students */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Typography variant="body1" component="label" required>
-                  Students <span style={{ color: 'red' }}>*</span>
+                  Students <span style={{ color: "red" }}>*</span>
                 </Typography>
-                <Button variant="contained" onClick={handleAddStudent} startIcon={<span>+</span>} size="small" sx={{ bgcolor: '#4285F4', color: 'white', '&:hover': { bgcolor: '#3367d6' } }}>
+                <Button
+                  variant="contained"
+                  onClick={handleAddStudent}
+                  startIcon={<span>+</span>}
+                  size="small"
+                  sx={{
+                    bgcolor: "#4285F4",
+                    color: "white",
+                    "&:hover": { bgcolor: "#3367d6" },
+                  }}
+                >
                   Add Student
                 </Button>
               </Box>
               {selectedStudents.map((student, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Box
+                  key={index}
+                  sx={{ display: "flex", gap: 2, alignItems: "center" }}
+                >
                   <Autocomplete
                     options={students}
-                    getOptionLabel={(option) => option.name || ''}
-                    value={student.name ? students.find(s => s.name === student.name) || null : null}
-                    onChange={(event, newValue) => handleStudentChange(index, newValue)}
+                    getOptionLabel={(option) => option.name || ""}
+                    value={
+                      student.name
+                        ? students.find((s) => s.name === student.name) || null
+                        : null
+                    }
+                    onChange={(event, newValue) =>
+                      handleStudentChange(index, newValue)
+                    }
                     renderInput={(params) => (
-                      <TextField {...params} placeholder="Select or search student..." fullWidth required />
+                      <TextField
+                        {...params}
+                        placeholder="Select or search student..."
+                        fullWidth
+                        required
+                      />
                     )}
                     sx={{ flex: 1 }}
                   />
@@ -212,7 +335,7 @@ const TestSubmission = () => {
                     placeholder="Grade"
                     value={student.grade}
                     onChange={(e) => handleGradeChange(index, e.target.value)}
-                    sx={{ width: '100px' }}
+                    sx={{ width: "100px" }}
                     required
                   />
                   {selectedStudents.length > 1 && (
@@ -225,35 +348,70 @@ const TestSubmission = () => {
             </Box>
 
             {/* Subject */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1" component="label" required>
-                Subject <span style={{ color: 'red' }}>*</span>
+                Subject <span style={{ color: "red" }}>*</span>
               </Typography>
               <Autocomplete
                 options={subjects}
-                getOptionLabel={(option) => option.name || ''}
-                value={subject ? subjects.find(s => s.name === subject) || null : null}
-                onChange={(event, newValue) => setSubject(newValue ? newValue.name : '')}
+                getOptionLabel={(option) => option.name || ""}
+                value={
+                  subject
+                    ? subjects.find((s) => s.name === subject) || null
+                    : null
+                }
+                onChange={(event, newValue) =>
+                  setSubject(newValue ? newValue.name : "")
+                }
                 renderInput={(params) => (
-                  <TextField {...params} placeholder="Select Subject" required />
+                  <TextField
+                    {...params}
+                    placeholder="Select Subject"
+                    required
+                  />
                 )}
                 fullWidth
               />
             </Box>
 
             {/* Chapters */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Typography variant="body1" component="label" required>
-                  Chapters <span style={{ color: 'red' }}>*</span>
+                  Chapters <span style={{ color: "red" }}>*</span>
                 </Typography>
-                <Button variant="contained" onClick={handleAddChapter} startIcon={<span>+</span>} size='small' sx={{ bgcolor: '#4285F4', color: 'white', '&:hover': { bgcolor: '#3367d6' } }}>
+                <Button
+                  variant="contained"
+                  onClick={handleAddChapter}
+                  startIcon={<span>+</span>}
+                  size="small"
+                  sx={{
+                    bgcolor: "#4285F4",
+                    color: "white",
+                    "&:hover": { bgcolor: "#3367d6" },
+                  }}
+                >
                   Add Chapter
                 </Button>
               </Box>
               {chapters.map((chapter, index) => (
-                <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <TextField fullWidth placeholder="Enter chapter name" value={chapter.chapterName} onChange={(e) => handleChapterChange(index, e.target.value)} required />
+                <Box
+                  key={index}
+                  sx={{ display: "flex", gap: 2, alignItems: "center" }}
+                >
+                  <TextField
+                    fullWidth
+                    placeholder="Enter chapter name"
+                    value={chapter.chapterName}
+                    onChange={(e) => handleChapterChange(index, e.target.value)}
+                    required
+                  />
                   {chapters.length > 1 && (
                     <IconButton onClick={() => handleRemoveChapter(index)}>
                       <Close />
@@ -264,15 +422,22 @@ const TestSubmission = () => {
             </Box>
 
             {/* Subject Notes */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1" component="label">
                 Notes
               </Typography>
-              <TextField fullWidth multiline rows={4} placeholder="Enter notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                placeholder="Enter notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
             </Box>
 
             {/* Upload Test File */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Typography variant="body1" component="label">
                 Upload Test File
               </Typography>
@@ -280,21 +445,43 @@ const TestSubmission = () => {
                 variant="outlined"
                 component="label"
                 startIcon={<BsUpload />}
-                sx={{ width: 'fit-content', borderColor: '#e0e0e0', color: '#333', textTransform: 'none', '&:hover': { borderColor: '#4285F4' } }}
+                sx={{
+                  width: "fit-content",
+                  borderColor: "#e0e0e0",
+                  color: "#333",
+                  textTransform: "none",
+                  "&:hover": { borderColor: "#4285F4" },
+                }}
               >
                 Upload File
-                <input type="file" hidden accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload(e.target.files[0])} />
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileUpload(e.target.files[0])}
+                />
               </Button>
               {uploadTestFileUrl && (
                 <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  File uploaded: {uploadTestFileUrl.split('/').pop()}
+                  File uploaded: {uploadTestFileUrl.split("/").pop()}
                 </Typography>
               )}
             </Box>
 
             {/* Submit Button */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <Button type="submit" variant="contained" fullWidth sx={{ bgcolor: '#ffcc00', color: 'white', py: 1.5, fontWeight: 'bold', '&:hover': { bgcolor: '#e6b800' } }}>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                sx={{
+                  bgcolor: "#ffcc00",
+                  color: "white",
+                  py: 1.5,
+                  fontWeight: "bold",
+                  "&:hover": { bgcolor: "#e6b800" },
+                }}
+              >
                 Submit Test
               </Button>
             </Box>
@@ -302,8 +489,167 @@ const TestSubmission = () => {
         </form>
       </Box>
 
-      <Snackbar open={openAlert} autoHideDuration={6000} onClose={handleAlertClose}>
-        <Alert onClose={handleAlertClose} severity={alertSeverity} sx={{ width: '100%' }}>
+      {/* Test Correction Details Section */}
+      <Box
+        sx={{
+          p: 3,
+          width: "70%",
+          position: "relative",
+          left: "50%",
+          transform: "translateX(-50%)",
+          mb: 4,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", mb: 3, gap: 2 }}>
+          <IoMdDocument size={28} color="#1a237e" />
+          <Typography
+            variant="h6"
+            component="h1"
+            sx={{ color: "#1a237e", fontWeight: 600 }}
+          >
+            Test Correction Details
+          </Typography>
+        </Box>
+
+        {loadingSubmissions ? (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "150px",
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        ) : submissionsError ? (
+          <Box sx={{ p: 3, textAlign: "center" }}>
+            <Typography color="error" variant="body1">
+              {submissionsError}
+            </Typography>
+          </Box>
+        ) : testSubmissions.length === 0 ? (
+          <Box
+            sx={{
+              p: 3,
+              textAlign: "center",
+              border: "1px solid #eee",
+              borderRadius: "8px",
+            }}
+          >
+            <Typography variant="body1">No test submissions found.</Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {testSubmissions.map((submission, index) => (
+              <Card
+                key={index}
+                sx={{ borderRadius: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+              >
+                <CardContent sx={{ p: 3, position: "relative" }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Student Name(s)
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, mb: 2 }}
+                      >
+                        {submission.students
+                          ?.map((student) => student.name)
+                          .join(", ") || "N/A"}
+                      </Typography>
+
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Chapter Name
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, mb: 2 }}
+                      >
+                        {submission.subject?.chapters
+                          ?.map((chapter) => chapter.chapterName)
+                          .join(", ") || "N/A"}
+                      </Typography>
+
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Test File Location
+                      </Typography>
+                      {submission.subject?.uploadTestFileUrl ? (
+                        <Typography
+                          component="a"
+                          href={submission.subject.uploadTestFileUrl}
+                          variant="body1"
+                          sx={{
+                            color: "#1976d2",
+                            textDecoration: "none",
+                            fontWeight: 500,
+                            "&:hover": { textDecoration: "underline" },
+                          }}
+                        >
+                          Click here to view
+                        </Typography>
+                      ) : (
+                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                          No file uploaded
+                        </Typography>
+                      )}
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Subject
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, mb: 2 }}
+                      >
+                        {submission.subject?.name || "N/A"}
+                      </Typography>
+
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Total Marks
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 500, mb: 2 }}
+                      >
+                        {submission.totalMarks || "N/A"}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+
+                  {/* Submission date positioned at bottom right */}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 16,
+                    }}
+                  >
+                    Submitted on:{" "}
+                    {formatSubmissionDate(submission.proposedDate)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Box>
+
+      <Snackbar
+        open={openAlert}
+        autoHideDuration={6000}
+        onClose={handleAlertClose}
+      >
+        <Alert
+          onClose={handleAlertClose}
+          severity={alertSeverity}
+          sx={{ width: "100%" }}
+        >
           {alertMessage}
         </Alert>
       </Snackbar>

@@ -11,10 +11,12 @@ const studentRoutes = require('./routes/student.routes');
 const leaveRequestRoutes = require('./routes/leaveRequest.routes');
 const attendanceRoutes = require('./routes/attendance.routes');
 const dailyUpdateRoutes = require('./routes/dailyupdate.routes');
+const testSubmissionRoutes = require('./routes/testsubmission.routes');
 const subjectsRoutes = require('./routes/subjects.routes');
 const boardRoutes = require('./routes/board.routes');
 const gradesRoutes = require('./routes/grades.routes');
 const branchRoutes = require('./routes/branch.routes');
+const uploadRoutes = require('./routes/upload.routes'); // Import photo route
 // const nextcloudRoutes = require('./routes/nextcloud-routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const studentPerformanceRoutes = require('./routes/studentperformance.routes');
@@ -56,11 +58,13 @@ app.use('/api/leave-requests', leaveRequestRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/daily-updates', dailyUpdateRoutes);
+app.use('/api/test-submissions', testSubmissionRoutes )
 app.use('/api/student-performance', studentPerformanceRoutes);
 app.use('/api', subjectsRoutes)
 app.use('/api',boardRoutes)
 app.use('/api',gradesRoutes)
 app.use('/api',branchRoutes)
+app.use('/api/upload', uploadRoutes); // Register the route
 
 
 app.use('/', routes);

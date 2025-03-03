@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import {
   Box,
@@ -14,6 +14,7 @@ import {
   Select,
   MenuItem,
   Divider,
+  Avatar,
 } from "@mui/material";
 import {
   LocalizationProvider,
@@ -23,12 +24,10 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { Upload } from "lucide-react";
-import axios from "axios";
-import api from "../api";
 import { SubjectsContext } from "../context/SubjectsContext";
 
 const AddTeacher = () => {
-  const { register, control, setValue, watch } = useFormContext();
+  const { register, control, setValue, watch, getValues } = useFormContext();
 
   // Default times as strings
   const defaultStartTime = "09:00";
@@ -49,55 +48,32 @@ const AddTeacher = () => {
     "sunday",
   ];
 
-  // State for handling profile photo upload status
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
+  // State for handling profile photo preview
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  // Handle profile photo change and upload using /upload/photo API
-  const handleProfilePhotoChange = async (event) => {
+  // Handle profile photo selection (but don't upload yet)
+  const handleProfilePhotoChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
+    
     // Validate file type and size
     if (!file.type.startsWith("image/")) {
-      setUploadError("Please select an image file");
+      alert("Please select an image file");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("File size must be less than 5MB");
+      alert("File size must be less than 5MB");
       return;
     }
-    setUploadError("");
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("photo", file);
-
-      const response = await api.post("/upload/photo", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.data.success) {
-        const fileName = response.data.fileName;
-        const directUrl = `https://drive.inkstall.us/remote.php/webdav/Photos/${encodeURIComponent(
-          response.data.fileName
-        )}`;
-        setValue("profilePhotourl", directUrl);
-      } else {
-        setUploadError(response.data.message || "Upload failed");
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message ||
-        "Error uploading file";
-      setUploadError(`Upload failed: ${errorMessage}`);
-    } finally {
-      setUploading(false);
-    }
+    
+    // Create object URL for immediate preview
+    const objectUrl = URL.createObjectURL(file);
+    setProfilePhotoPreview(objectUrl);
+    setSelectedFile(file);
+    
+    // Store the file in form data for later upload
+    setValue("photoFile", file);
   };
 
   // File change handler for other documents (e.g. Offer Letter)
@@ -105,11 +81,18 @@ const AddTeacher = () => {
     setValue(field, event.target.files[0]);
   };
 
-  // Date formatting utility
-  const formatDate = (date) => {
-    const options = { day: "2-digit", month: "short", year: "numeric" };
-    return date.toLocaleDateString("en-GB", options).replace(/\s/g, " ");
-  };
+  // Reset profile photo preview when form is reset
+  useEffect(() => {
+    const subscription = watch((value, { name, type }) => {
+      // Check if form was reset (multiple fields changed at once)
+      if (type === "all") {
+        setProfilePhotoPreview(null);
+        setSelectedFile(null);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   return (
     <Box sx={{ maxWidth: 1200, pt: 4, mx: "auto" }}>
@@ -127,6 +110,8 @@ const AddTeacher = () => {
             cursor: "pointer",
             bgcolor: "#f5f5f5",
             borderRadius: "50%",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
           <input
@@ -136,17 +121,32 @@ const AddTeacher = () => {
             accept="image/*"
             onChange={handleProfilePhotoChange}
           />
-          <label htmlFor="profilePhoto" style={{ cursor: "pointer" }}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Upload size={24} color="#666" />
-            </Box>
+          <label htmlFor="profilePhoto" style={{ cursor: "pointer", width: "100%", height: "100%" }}>
+            {profilePhotoPreview ? (
+              <Avatar 
+                src={profilePhotoPreview} 
+                alt="Profile Photo"
+                sx={{ 
+                  width: "100%", 
+                  height: "100%", 
+                  objectFit: "cover"
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  height: "100%",
+                  gap: 1,
+                }}
+              >
+                <Upload size={24} color="#666" />
+              </Box>
+            )}
           </label>
         </Box>
         <Box>
@@ -155,26 +155,20 @@ const AddTeacher = () => {
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontSize: "14px", fontWeight: 500 }}>
-              {watch("profilePhotourl") ? "File Uploaded" : "Choose File"}              
+              {selectedFile ? selectedFile.name : "Choose File"}              
             </Typography>
           </Box>
-          {uploading && (
-            <Typography
-              variant="body2"
-              color="textSecondary"
-              sx={{ fontSize: "14px" }}
-            >
-              Uploading...
-            </Typography>
-          )}
-          {uploadError && (
-            <Typography variant="body2" color="error" sx={{ fontSize: "14px" }}>
-              {uploadError}
-            </Typography>
-          )}
+          {/* <Typography
+            variant="body2"
+            color="textSecondary"
+            sx={{ fontSize: "14px" }}
+          >
+            {selectedFile ? "Photo will be uploaded when you save" : "No file chosen"}
+          </Typography> */}
         </Box>
       </Box>
 
+      {/* Rest of component remains the same */}
       <Grid container spacing={3} sx={{ mt: 1 }}>
         <Grid item xs={12} md={6}>
           <Controller
@@ -189,16 +183,15 @@ const AddTeacher = () => {
                   onChange={(newValue) =>
                     onChange(newValue ? newValue.format("DD:MM:YYYY") : "")
                   }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      fullWidth
-                      error={!!error}
-                      helperText={error?.message}
-                      InputProps={{ sx: { "& input": { fontSize: "14px" } } }}
-                      InputLabelProps={{ sx: { fontSize: "14px" } }}
-                    />
-                  )}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      error: !!error,
+                      helperText: error?.message,
+                      InputProps: { sx: { "& input": { fontSize: "14px" } } },
+                      InputLabelProps: { sx: { fontSize: "14px" } }
+                    }
+                  }}
                 />
               </LocalizationProvider>
             )}

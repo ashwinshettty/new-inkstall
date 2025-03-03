@@ -2,12 +2,29 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { createClient } = require('webdav');
+const fs = require('fs');
+const path = require('path');
 const { auth } = require('../middleware/auth.middleware');
 require('dotenv').config();
 
-// Configure multer for temporary file storage
+// Configure multer for disk storage
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadsDir = path.join(__dirname, '../uploads');
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+        const fileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        cb(null, fileName);
+    }
+});
+
 const upload = multer({ 
-    storage: multer.memoryStorage(),
+    storage: storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB limit
     }
@@ -49,8 +66,14 @@ router.post('/photo', auth, upload.single('photo'), async (req, res) => {
         }
 
         const file = req.file;
-        const fileName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const fileName = file.filename;
+        const filePath = file.path;
         const remotePath = `Photos/${fileName}`;
+        
+        // Get server domain and construct local URL
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const localUrl = `${protocol}://${host}/uploads/${fileName}`;
 
         // Create a new client instance for this request
         const client = createWebDAVClient();
@@ -80,8 +103,11 @@ router.post('/photo', auth, upload.single('photo'), async (req, res) => {
         try {
             console.log('Uploading to path:', remotePath);
             
+            // Read file from disk
+            const fileBuffer = fs.readFileSync(filePath);
+            
             // Add explicit content type and length headers
-            await client.putFileContents(remotePath, file.buffer, {
+            await client.putFileContents(remotePath, fileBuffer, {
                 contentLength: file.size,
                 overwrite: true,
                 headers: {
@@ -90,13 +116,14 @@ router.post('/photo', auth, upload.single('photo'), async (req, res) => {
                 }
             });
 
-            // Generate public URL
-            const publicUrl = `${normalizeUrl(process.env.NEXTCLOUD_URL)}/index.php/apps/files/?dir=/Photos`;
+            // Generate NextCloud URL
+            const nextCloudUrl = `${normalizeUrl(process.env.NEXTCLOUD_URL)}/remote.php/webdav/Photos/${encodeURIComponent(fileName)}`;
 
             res.status(200).json({
                 success: true,
                 message: 'File uploaded successfully',
-                url: publicUrl,
+                localUrl: localUrl,
+                nextCloudUrl: nextCloudUrl,
                 fileName: fileName
             });
         } catch (uploadError) {

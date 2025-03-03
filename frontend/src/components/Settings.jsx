@@ -64,6 +64,8 @@ const Settings = () => {
       password: "",
       role: "",
       profilePhotourl: "",
+      localPhotoUrl: "", // Add local photo URL
+      fileName: "", // Add filename for reference
       startingDate: "",
       aboutMe: "",
       subjects: [],
@@ -80,6 +82,33 @@ const Settings = () => {
     data.role = selectedRole;
 
     try {
+      // Get the profilePhoto from AddTeacher component via form state
+      const photoFile = data.photoFile;
+      
+      // If there's a photo file to upload, upload it first
+      if (photoFile) {
+        const formData = new FormData();
+        formData.append("photo", photoFile);
+        
+        const photoResponse = await api.post("/upload/photo", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        
+        if (photoResponse.data.success) {
+          // Update the data with the uploaded photo URLs
+          data.profilePhotourl = photoResponse.data.nextCloudUrl;
+          data.localPhotoUrl = photoResponse.data.localUrl;
+          data.fileName = photoResponse.data.fileName;
+        } else {
+          throw new Error(photoResponse.data.message || "Photo upload failed");
+        }
+      }
+      
+      // Remove the temporary photoFile field from data before sending to server
+      delete data.photoFile;
+
       const response = await api.post("/auth/users", data, {
         headers: {
           "Content-Type": "application/json",
